@@ -1,0 +1,2 @@
+CREATE TYPE "public"."payment_split_type" AS ENUM('creator_pays_all', 'split_evenly');--> statement-breakpoint
+ALTER TABLE "matches" ADD COLUMN "payment_split_type" "payment_split_type" DEFAULT 'split_evenly';

@@ -1,0 +1,374 @@
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { BookingRepository } from './booking.repository';
+import {
+  Booking,
+  Match,
+  Profile,
+  users,
+  venueSports,
+} from '@sportefy/db-types';
+import { CreateBookingDto } from './dto/create-booking.dto';
+import {
+  BookingStatus,
+  MatchType,
+  PaymentSplitType,
+  SlotEventType,
+  SportType,
+} from 'src/common/types';
+import { ProfileRepository } from 'src/profile/profile.repository';
+import { and, eq, gt, gte } from 'drizzle-orm';
+import {
+  bookings,
+  matches,
+  matchPlayers,
+  slots,
+  venues,
+} from '@sportefy/db-types';
+import { SlotService } from 'src/slot/slot.service';
+import { SlotRepository } from 'src/slot/slot.repository';
+import { MatchRepository } from 'src/match/match.repository';
+import { ResponseBuilder } from 'src/common/utils/response-builder';
+import { MatchPlayerRepository } from 'src/match-player/match-player.repository';
+import { BookingSchedulerService } from './booking-scheduler.service';
+import { BookingCreatedEvent } from './events/booking-created.event';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { CreditService } from 'src/credit/credit.service';
+import * as bookingValidator from './utils/booking.validation';
+import { UpdateBookingDto } from './dto/update-booking.dto';
+import { JwtService } from '@nestjs/jwt';
+import { UnitOfWork } from 'src/common/services/unit-of-work.service';
+import { GetBookingsDto } from './dto/get-bookings.dto';
+import { VenueSportRepository } from 'src/venue-sport/venue-sport.repository';
+
+@Injectable()
+export class BookingService {
+  constructor(
+    private readonly bookingRepository: BookingRepository,
+    private readonly profileRepository: ProfileRepository,
+    private readonly slotService: SlotService,
+    private readonly slotRepository: SlotRepository,
+    private readonly matchRepository: MatchRepository,
+    private readonly matchPlayerRepository: MatchPlayerRepository,
+    private readonly bookingSchedulerService: BookingSchedulerService,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly creditService: CreditService,
+    private readonly jwtService: JwtService,
+    private readonly unitOfWork: UnitOfWork,
+    private readonly venueSportRepository: VenueSportRepository,
+  ) {}
+
+  async getBooking(user: Profile, bookingId: string) {
+    const [booking] = await this.bookingRepository.getBookingsWithJoinedSlot(
+      eq(bookings.id, bookingId),
+    );
+
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+    if (user.id !== booking.booking.bookedBy) {
+      throw new ForbiddenException('you dont own the booking');
+    }
+
+    return ResponseBuilder.success(booking);
+  }
+
+  async getUserBookings(user: Profile, getBookingsDto: GetBookingsDto) {
+    const { limit, offset, page, status } = getBookingsDto;
+
+    const startOfDay = new Date();
+
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30));
+
+    const createdAtCondition =
+      status === 'upcoming'
+        ? gte(bookings.createdAt, startOfDay)
+        : gte(bookings.createdAt, thirtyDaysAgo);
+
+    const bookingIsBookedByUser = eq(users.id, user.id);
+    const whereConditions = and(createdAtCondition, bookingIsBookedByUser);
+    const total = await this.bookingRepository.count(whereConditions);
+    const result = await this.bookingRepository.getManyBookings(
+      whereConditions,
+      undefined,
+      limit,
+      offset,
+      (bookings, { desc }) => desc(bookings.createdAt),
+    );
+    const paginationLimit = limit || 10;
+    const paginationPage = page || 1;
+
+    const totalPages = Math.ceil(total / paginationLimit);
+    const hasNext = paginationPage < totalPages;
+    const hasPrev = paginationPage > 1;
+
+    return ResponseBuilder.paginated(result, {
+      page: paginationPage,
+      limit: paginationLimit,
+      total,
+      totalPages,
+      hasNext,
+      hasPrev,
+    });
+  }
+
+  async createBooking(user: Profile, createBookingDto: CreateBookingDto) {
+    const { match, slot, venueId, sportId } = createBookingDto;
+
+    const venueSportCheck = await this.venueSportRepository.getVenueSport(
+      and(eq(venueSports.venueId, venueId), eq(venueSports.sportId, sportId)),
+      {
+        venue: true,
+        sport: true,
+      },
+    );
+
+    if (!venueSportCheck) {
+      throw new NotFoundException('venue not found');
+    }
+
+    const { venue, sport } = venueSportCheck;
+
+    bookingValidator.assertPlayerLimitIsLessThanCapacity(
+      venue,
+      createBookingDto.match.playerLimit,
+    );
+
+    if (sport.sportType === SportType.SINGLE) {
+    }
+
+    // check if the slot is available
+    await this.slotService.validateTimeSlot(
+      venueId,
+      slot.startTime,
+      slot.endTime,
+    );
+
+    // Calculate credits to charge using the extracted function
+    const creditsToCharge = this.creditService.calculatePerPlayerCharge(
+      match.matchType,
+      match.paymentSplitType,
+      venue.basePrice,
+      match.playerLimit,
+      true,
+    );
+
+    bookingValidator.assertUserHasEnoughCredits(user, creditsToCharge);
+
+    // create booking
+    const result = await this.unitOfWork.do(async (tx) => {
+      const newBooking = await this.bookingRepository.createBooking(
+        {
+          bookedBy: user.id,
+          totalCredits: venue.basePrice,
+          venueId: venueId,
+        },
+        tx,
+      );
+
+      const finalQrCodeToken = await this.jwtService.signAsync({
+        bookingId: newBooking.id,
+      });
+
+      const [_, newMatch] = await Promise.all([
+        // create slot
+        this.slotRepository.createSlot(
+          {
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            eventId: newBooking.id,
+            eventType: SlotEventType.BOOKING,
+            venueId,
+          },
+          tx,
+        ),
+
+        // create match
+        this.matchRepository.createMatch(
+          {
+            bookingId: newBooking.id,
+            createdBy: user.id,
+            playerLimit: match.playerLimit,
+            genderPreference: match.genderPreference ? 'any' : undefined,
+            organizationPreference: match.organizationPreference ?? undefined,
+            minAge: match.minAge,
+            maxAge: match.maxAge,
+            title: match.title,
+            skillLevel: match.skillLevel,
+            matchType: match.matchType,
+            paymentSplitType: match.paymentSplitType,
+            status: 'open',
+            sportId: createBookingDto.sportId,
+          },
+          tx,
+        ),
+      ]);
+
+      await this.matchPlayerRepository.createMatchPlayer(
+        {
+          userId: user.id,
+          matchId: newMatch.id,
+          team: 'A',
+        },
+        tx,
+      );
+
+      // finally charge credits
+      await this.profileRepository.updateProfileCreditsById(
+        user.id,
+        -creditsToCharge,
+        tx,
+      );
+      // TODO:
+      // await this.transactionRepository.createTransaction(
+      //   {
+      //     userId: user.id,
+      //     bookingId: newBooking.id,
+      //     type: TransactionType.BOOKING_FEE,
+      //     amount: -creditsToCharge,
+      //   },
+      //   tx,
+      // );
+
+      if (match.matchType === MatchType.PUBLIC) {
+        this.eventEmitter.emit(
+          'booking.created',
+          new BookingCreatedEvent(
+            newBooking.id,
+            newMatch.id,
+            venueId,
+            newBooking.createdAt || new Date(),
+          ),
+        );
+      }
+
+      return [newBooking, newMatch];
+    });
+
+    return ResponseBuilder.created(result, 'Booking created successfully');
+  }
+
+  async updateBooking(
+    user: Profile,
+    bookingId: string,
+    updateBookingDto: UpdateBookingDto,
+  ) {
+    const booking = await this.bookingRepository.getBookingById(bookingId, {
+      match: true,
+    });
+    if (!booking) {
+      throw new NotFoundException('booking not found');
+    }
+    const { status } = updateBookingDto;
+
+    if (status === BookingStatus.CANCELLED) {
+      return await this.handleCancelBooking(user, booking);
+    }
+
+    if (status === BookingStatus.CONFIRMED) {
+      return await this.handleConfirmBooking(user, booking);
+    }
+    throw new BadRequestException('Invalid status');
+  }
+
+  async handleConfirmBooking(
+    user: Profile,
+    booking: Booking & { match: Match },
+  ) {
+    bookingValidator.validateConfirmableBooking(booking, user);
+
+    const result = await this.unitOfWork.do(async (tx) => {
+      return await this.bookingRepository.updateBookingById(
+        booking.id,
+        {
+          status: BookingStatus.CONFIRMED,
+        },
+        tx,
+      );
+    });
+
+    return result;
+  }
+  async handleCancelBooking(
+    user: Profile,
+    booking: Booking & { match: Match },
+  ) {
+    bookingValidator.validateCancellableBooking(booking, user);
+
+    await this.unitOfWork.do(async (tx) => {
+      if (
+        booking.match.paymentSplitType === PaymentSplitType.CREATOR_PAYS_ALL
+      ) {
+        await this.profileRepository.updateProfileCreditsById(
+          user.id,
+          booking.totalCredits,
+          tx,
+        );
+      } else {
+        const players = await this.matchPlayerRepository.getManyMatchPlayers(
+          eq(matchPlayers.matchId, booking.match.id),
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          tx,
+        );
+
+        if (players.length > 0) {
+          const creditsToRestorePerPlayer =
+            this.creditService.calculatePerPlayerCharge(
+              booking.match.matchType as MatchType,
+              booking.match.paymentSplitType as PaymentSplitType,
+              booking.totalCredits,
+              booking.match.playerLimit,
+            );
+
+          await Promise.all(
+            players.map((player) =>
+              this.profileRepository.updateProfileCreditsById(
+                player.userId,
+                creditsToRestorePerPlayer,
+                tx,
+              ),
+            ),
+          );
+        }
+        await Promise.all([
+          this.bookingRepository.updateBookingById(
+            booking.id,
+            {
+              status: 'cancelled',
+            },
+            tx,
+          ),
+
+          this.matchRepository.updateMatch(
+            eq(matches.bookingId, booking.id),
+            { status: 'cancelled' },
+            tx,
+          ),
+
+          this.slotRepository.deleteSlot(
+            and(
+              eq(slots.eventId, booking.id),
+              eq(slots.eventType, SlotEventType.BOOKING),
+              eq(slots.venueId, booking.venueId),
+            ),
+            tx,
+          ),
+        ]);
+      }
+    });
+
+    this.bookingSchedulerService.cancelScheduledJob(booking.id);
+
+    return ResponseBuilder.success(null, 'Booking cancelled successfully.');
+  }
+}

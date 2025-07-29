@@ -1,5 +1,5 @@
 {
-  "name": "sportefy-app",
+  "name": "sportefy",
   "private": true,
   "scripts": {
     "build": "turbo run build",

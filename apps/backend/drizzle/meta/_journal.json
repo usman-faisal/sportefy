@@ -1,0 +1,62 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1752678927827,
+      "tag": "0000_lonely_screwball",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1752754567652,
+      "tag": "0001_known_spiral",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1752836701694,
+      "tag": "0002_dear_stark_industries",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1753260657203,
+      "tag": "0003_closed_proemial_gods",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1753363953866,
+      "tag": "0004_clumsy_johnny_storm",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1753454247470,
+      "tag": "0005_orange_namor",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1753457404570,
+      "tag": "0006_open_cerise",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1753460631466,
+      "tag": "0007_freezing_blob",
+      "breakpoints": true
+    }
+  ]
+}
