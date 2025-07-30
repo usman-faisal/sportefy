@@ -1,8 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsDate, IsOptional } from 'class-validator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
-export class GetBookingOverviewDto {
+export class GetBookingOverviewDto extends PaginationDto {
   @ApiPropertyOptional({
     description:
       'The date for the overview in YYYY-MM-DD format. Defaults to today.',

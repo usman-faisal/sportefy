@@ -15,6 +15,7 @@ import { Profile, User } from '@sportefy/db-types';
 import { UserRole } from 'src/common/types';
 import { Auth } from 'src/common/decorators/auth.decorator';
 import { ApiBody } from '@nestjs/swagger';
+import { ResponseBuilder } from 'src/common/utils/response-builder';
 
 @Controller('profile')
 export class ProfileController {
@@ -23,7 +24,7 @@ export class ProfileController {
   @Auth(UserRole.ADMIN, UserRole.USER)
   @Get('me')
   async getProfile(@CurrentUser() user: Profile) {
-    return user;
+    return ResponseBuilder.success(user);
   }
 
   @Auth(UserRole.ADMIN, UserRole.USER)

@@ -174,7 +174,6 @@ export class UserScopeController {
   @Get('user-scope/my-scopes')
   @ApiOperation({ summary: 'Get your user scopes' })
   @ApiResponse({ status: 200, description: 'Returns the updated facility.' })
-  @ApiScope([ScopeRole.OWNER], [Scope.FACILITY, 'facilityId'])
   async getMyScopes(@CurrentUser() user: Profile) {
     return this.userScopeService.getMyUserScopes(user.id);
   }

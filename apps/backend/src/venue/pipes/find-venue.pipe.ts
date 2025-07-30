@@ -11,7 +11,7 @@ export class FindVenuePipe implements PipeTransform<string, Promise<Venue>> {
       if (!venueId) {
         throw new NotFoundException('Venue ID is required');
       }
-      console.log(venueId);
+      console.log(venueId, 'venue');
 
       const venue = await this.venueUtil.getVenueById(venueId);
 

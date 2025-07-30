@@ -13,6 +13,7 @@ export class BookingOverviewController {
     private readonly bookingOverviewService: BookingOverviewService,
   ) {}
 
+  @Auth(UserRole.ADMIN)
   @Get()
   @ApiOperation({ summary: 'Get a daily overview of bookings and revenue' })
   getDailyOverview(@Query() query: GetBookingOverviewDto) {

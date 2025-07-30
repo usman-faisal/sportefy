@@ -2,7 +2,7 @@
 import { signIn } from "@/lib/auth/actions";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import GoogleLoginButton from "@/app/components/google-login-button";
+import GoogleLoginButton from "./components/google-login-button";
 
 export default async function LoginPage({
   searchParams,

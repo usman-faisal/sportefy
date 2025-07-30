@@ -111,10 +111,6 @@ export class UserScopeService {
       { facility: true, venue: true },
     );
 
-    if (!scopes || scopes.length === 0) {
-      throw new ForbiddenException('You are not a moderator or admin');
-    }
-
     return ResponseBuilder.success(scopes, 'fetched scopes successfully');
   }
 }

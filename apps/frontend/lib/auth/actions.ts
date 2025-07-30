@@ -1,4 +1,3 @@
-// app/lib/auth/actions.ts
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
@@ -30,7 +29,7 @@ export async function signIn(formData: FormData) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
       path: "/",
     });
   }

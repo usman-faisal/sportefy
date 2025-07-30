@@ -7,6 +7,9 @@ export const updateSession = async (request: NextRequest) => {
     request,
   });
 
+  // Add pathname to headers for server components
+  supabaseResponse.headers.set("x-pathname", request.nextUrl.pathname);
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -34,7 +37,6 @@ export const updateSession = async (request: NextRequest) => {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Update the access token cookie if user is authenticated
   if (user) {
     const {
       data: { session },
@@ -50,7 +52,6 @@ export const updateSession = async (request: NextRequest) => {
       });
     }
   } else {
-    // Clear the access token cookie if user is not authenticated
     supabaseResponse.cookies.delete("access-token");
   }
 

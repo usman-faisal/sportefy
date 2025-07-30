@@ -3,6 +3,7 @@ import { GetBookingOverviewDto } from './dto/get-booking-overview.dto';
 import { BookingRepository } from 'src/booking/booking.repository';
 import { VenueRepository } from 'src/venue/venue.repository';
 import { ResponseBuilder } from 'src/common/utils/response-builder';
+import { PaginatedResult } from 'src/common/types';
 
 @Injectable()
 export class BookingOverviewService {
@@ -12,55 +13,49 @@ export class BookingOverviewService {
   ) {}
 
   async getDailyOverview(query: GetBookingOverviewDto) {
-    const { date } = query;
+    const { date, limit, offset, page } = query;
     const targetDate = date || new Date();
 
-    const venues = await this.venueRepository.getManyVenues(undefined);
-    if (!venues || venues.length === 0) {
-      return ResponseBuilder.success(
-        { courts: [], summary: this.getEmptySummary() },
-        'No venue data available.',
-      );
+    const totalVenues = await this.venueRepository.count(undefined);
+
+    if (totalVenues === 0) {
+      const emptyResponse = {
+        summary: this.getEmptySummary(),
+        courts: {
+          data: [],
+          pagination: {
+            page: page || 1,
+            limit: limit || 10,
+            total: 0,
+            totalPages: 0,
+            hasNext: false,
+            hasPrev: false,
+          },
+        },
+      };
+      return ResponseBuilder.success(emptyResponse, 'No venue data available.');
     }
 
-    const TOTAL_POSSIBLE_SLOTS_PER_COURT = 14;
-
-    const bookings =
+    const allBookings =
       await this.bookingRepository.findBookingsByDate(targetDate);
+
+    const TOTAL_POSSIBLE_SLOTS_PER_COURT = 14;
+    const totalPossibleSlots = totalVenues * TOTAL_POSSIBLE_SLOTS_PER_COURT;
 
     let totalRevenue = 0;
     let totalBookedSlots = 0;
     let totalNoShows = 0;
 
-    const courtData = venues.map((venue) => {
-      const courtBookings = bookings.filter(
-        (b) => b.booking.venueId === venue.id && b.slot,
-      );
-      const bookedSlots = courtBookings.length;
-      const courtRevenue = courtBookings.reduce(
-        (sum, b) => sum + b.booking.totalCredits,
-        0,
-      );
-      const noShows = courtBookings.filter(
-        (b) => b.booking.status === 'completed',
-      ).length;
-
-      totalRevenue += courtRevenue;
-      totalBookedSlots += bookedSlots;
-      totalNoShows += noShows;
-
-      return {
-        courtId: venue.id,
-        courtName: venue.name || `Court ${venue.id.slice(0, 4)}`,
-        bookedSlots,
-        availableSlots: TOTAL_POSSIBLE_SLOTS_PER_COURT - bookedSlots,
-        occupancyRate: (bookedSlots / TOTAL_POSSIBLE_SLOTS_PER_COURT) * 100,
-        revenue: courtRevenue,
-        noShows,
-      };
+    allBookings.forEach((booking) => {
+      if (booking.slot) {
+        totalBookedSlots++;
+        totalRevenue += booking.booking.totalCredits;
+        if (booking.booking.status === 'completed') {
+          totalNoShows++;
+        }
+      }
     });
 
-    const totalPossibleSlots = venues.length * TOTAL_POSSIBLE_SLOTS_PER_COURT;
     const overallOccupancy =
       totalPossibleSlots > 0
         ? (totalBookedSlots / totalPossibleSlots) * 100
@@ -74,9 +69,50 @@ export class BookingOverviewService {
       overallOccupancyRate: overallOccupancy,
     };
 
-    return ResponseBuilder.success({
-      summary,
-      courts: courtData,
+    const venues = await this.venueRepository.getManyVenues(
+      undefined,
+      undefined,
+      limit,
+      offset,
+    );
+
+    const courtData = venues.map((venue) => {
+      const courtBookings = allBookings.filter(
+        (b) => b.booking.venueId === venue.id && b.slot,
+      );
+      const bookedSlots = courtBookings.length;
+      const courtRevenue = courtBookings.reduce(
+        (sum, b) => sum + b.booking.totalCredits,
+        0,
+      );
+      const noShows = courtBookings.filter(
+        (b) => b.booking.status === 'completed',
+      ).length;
+
+      return {
+        courtId: venue.id,
+        courtName: venue.name || `Court ${venue.id.slice(0, 4)}`,
+        bookedSlots,
+        availableSlots: TOTAL_POSSIBLE_SLOTS_PER_COURT - bookedSlots,
+        occupancyRate: (bookedSlots / TOTAL_POSSIBLE_SLOTS_PER_COURT) * 100,
+        revenue: courtRevenue,
+        noShows,
+      };
+    });
+
+    const paginationLimit = limit || 10;
+    const paginationPage = page || 1;
+    const totalPages = Math.ceil(totalVenues / paginationLimit);
+    const hasNext = paginationPage < totalPages;
+    const hasPrev = paginationPage > 1;
+
+    return ResponseBuilder.paginated(courtData, {
+      page: paginationPage,
+      limit: paginationLimit,
+      total: totalVenues,
+      totalPages,
+      hasNext,
+      hasPrev,
     });
   }
 

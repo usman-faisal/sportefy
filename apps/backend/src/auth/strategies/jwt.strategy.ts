@@ -13,12 +13,9 @@ import { Request } from 'express';
 
 const cookieExtractor = (req: Request): string | null => {
   if (req && req.cookies) {
-    console.log('All cookies:', req.cookies);
     const token = req.cookies['access-token'] ?? null;
-    console.log('Extracted token from cookie:', token ? 'Present' : 'Missing');
     return token;
   }
-  console.log('No cookies found in request');
   return null;
 };
 

@@ -31,7 +31,6 @@ export class ScopeGuard implements CanActivate {
       'scope_roles',
       [context.getHandler(), context.getClass()],
     );
-    this.logger.log(context);
 
     if (!requiredRoles || requiredRoles.length === 0) return true;
 
