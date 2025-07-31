@@ -101,7 +101,7 @@ export async function apiPaginated<T = unknown>(
 
   const pathWithParams = searchParams.toString()
     ? `${path}?${searchParams.toString()}`
-    : path;
+    : path;``
 
   const response = await api<PaginatedResponse<T>>(pathWithParams, options);
   return response?.data || null;
