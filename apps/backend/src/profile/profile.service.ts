@@ -1,20 +1,9 @@
-import {
-  HttpException,
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
   DRIZZLE_CLIENT,
   DrizzleClient,
 } from 'src/common/providers/drizzle.provider';
-import { profiles, Profile } from '@sportefy/db-types';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { UserRole } from 'src/common/types';
-import { DrizzleTransaction } from 'src/database/types';
 import { ProfileRepository } from './profile.repository';
 
 @Injectable()

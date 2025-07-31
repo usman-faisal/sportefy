@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 export default async function Dashboard() {
   const profile = await profileService.getProfile();
 
-  // Redirect admin users to the admin dashboard
   if (profile?.role === UserRole.ADMIN) {
     redirect("/dashboard/admin");
   }
@@ -21,7 +20,6 @@ export default async function Dashboard() {
         </p>
       </div>
 
-      {/* User Dashboard Content */}
       <div className="bg-white shadow rounded-lg">
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">

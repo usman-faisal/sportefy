@@ -80,7 +80,6 @@ export async function api<T = unknown>(
   }
 }
 
-// Dedicated function for paginated API calls
 export async function apiPaginated<T = unknown>(
   path: string,
   params?: {
@@ -101,8 +100,9 @@ export async function apiPaginated<T = unknown>(
 
   const pathWithParams = searchParams.toString()
     ? `${path}?${searchParams.toString()}`
-    : path;``
+    : path;
+  ``;
 
   const response = await api<PaginatedResponse<T>>(pathWithParams, options);
-  return response?.data || null;
+  return (response as unknown as PaginatedResponse<T>) || null;
 }

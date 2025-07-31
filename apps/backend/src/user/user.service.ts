@@ -11,7 +11,7 @@ export class UserService {
    * Get a paginated list of users with search functionality.
    */
   async getAllUsers(searchQuery: SearchUsersDto) {
-    const { search, limit = 10, page = 10 } = searchQuery;
+    const { search, limit = 10, page = 1 } = searchQuery;
     const offset = (page - 1) * limit;
 
     const { users, total } = await this.profileRepository.findAndCount({

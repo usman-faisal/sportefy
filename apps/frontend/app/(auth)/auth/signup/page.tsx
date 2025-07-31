@@ -1,7 +1,7 @@
 import { signUp } from "@/lib/auth/actions";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import GoogleLoginButton from "@/app/auth/login/components/google-login-button";
+import GoogleLoginButton from "@/components/auth/google-login-button";
 
 export default async function SignUpPage({
   searchParams,

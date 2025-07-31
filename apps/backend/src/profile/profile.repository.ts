@@ -82,7 +82,7 @@ export class ProfileRepository extends BaseRepository {
         )
       : undefined;
 
-    const where = and(eq(profiles.role, UserRole.USER), searchCondition);
+    const where = and(searchCondition);
 
     const [users, totalResult] = await Promise.all([
       this.db.query.profiles.findMany({
@@ -105,6 +105,10 @@ export class ProfileRepository extends BaseRepository {
       where: eq(profiles.id, userId),
       with: {
         bookings: {
+          with: {
+            venue: true,
+            match: true,
+          },
           orderBy: (bookings, { desc }) => [desc(bookings.createdAt)],
           limit: 20,
         },

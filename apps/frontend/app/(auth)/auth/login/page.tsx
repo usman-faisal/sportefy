@@ -2,14 +2,16 @@
 import { signIn } from "@/lib/auth/actions";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import GoogleLoginButton from "./components/google-login-button";
+import GoogleLoginButton from "@/components/auth/google-login-button";
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { message?: string };
+  searchParams: Promise<{ message?: string }>;
 }) {
   // Check if user is already logged in
+  const resolvedSearchParams = await searchParams;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -87,9 +89,9 @@ export default async function LoginPage({
             </button>
           </div>
 
-          {searchParams?.message && (
+          {resolvedSearchParams?.message && (
             <div className="mt-4 text-center text-sm text-red-600">
-              {searchParams.message}
+              {resolvedSearchParams.message}
             </div>
           )}
         </form>

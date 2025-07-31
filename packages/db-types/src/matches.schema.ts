@@ -6,73 +6,73 @@ import {
   text,
   varchar,
   timestamp,
-} from 'drizzle-orm/pg-core';
-import { bookings } from './bookings.schema';
-import { users } from './users.schema'; // Assuming you have a users table
-import { InferInsertModel, InferSelectModel, relations } from 'drizzle-orm';
-import { matchPlayers } from './match-players.schema';
-import { sports } from './sports.schema';
+} from "drizzle-orm/pg-core";
+import { bookings } from "./bookings.schema";
+import { users } from "./users.schema"; // Assuming you have a users table
+import { InferInsertModel, InferSelectModel, relations } from "drizzle-orm";
+import { matchPlayers } from "./match-players.schema";
+import { sports } from "./sports.schema";
 
-export const matchTypeEnum = pgEnum('match_type', ['private', 'public']);
-export const matchStatusEnum = pgEnum('match_status', [
-  'open',
-  'full',
-  'completed',
-  'cancelled',
+export const matchTypeEnum = pgEnum("match_type", ["private", "public"]);
+export const matchStatusEnum = pgEnum("match_status", [
+  "open",
+  "full",
+  "completed",
+  "cancelled",
 ]);
-export const genderPreferenceEnum = pgEnum('gender_preference', [
-  'any',
-  'male_only',
-  'female_only',
+export const genderPreferenceEnum = pgEnum("gender_preference", [
+  "any",
+  "male_only",
+  "female_only",
 ]);
-export const skillLevelEnum = pgEnum('skill_level', [
-  'any',
-  'beginner',
-  'intermediate',
-  'advanced',
+export const skillLevelEnum = pgEnum("skill_level", [
+  "any",
+  "beginner",
+  "intermediate",
+  "advanced",
 ]);
-export const paymentSplitTypeEnum = pgEnum('payment_split_type', [
-  'creator_pays_all',
-  'split_evenly',
+export const paymentSplitTypeEnum = pgEnum("payment_split_type", [
+  "creator_pays_all",
+  "split_evenly",
 ]);
 
-export const matches = pgTable('matches', {
+export const matches = pgTable("matches", {
   // --- Core Match Information ---
-  id: uuid('id').primaryKey().defaultRandom(),
-  bookingId: uuid('booking_id')
+  id: uuid("id").primaryKey().defaultRandom(),
+  bookingId: uuid("booking_id")
     .notNull()
     .unique()
-    .references(() => bookings.id, { onDelete: 'cascade' }),
-  matchType: matchTypeEnum('match_type').notNull().default('public'),
-  status: matchStatusEnum('status').notNull().default('open'),
+    .references(() => bookings.id, { onDelete: "cascade" }),
+  matchType: matchTypeEnum("match_type").notNull().default("public"),
+  status: matchStatusEnum("status").notNull().default("open"),
 
   // --- Player & Capacity Management ---
-  createdBy: uuid('created_by')
+  createdBy: uuid("created_by")
     .notNull()
     .references(() => users.id),
-  playerLimit: integer('player_limit').notNull(),
+  playerLimit: integer("player_limit").notNull(),
 
   // --- Discoverability & Details ---
-  title: text('title'), // e.g., "Intermediate Doubles @ 6 PM"
+  title: text("title"), // e.g., "Intermediate Doubles @ 6 PM"
 
   // --- Match Preferences ---
-  genderPreference: genderPreferenceEnum('gender_preference')
+  genderPreference: genderPreferenceEnum("gender_preference")
     .notNull()
-    .default('any'),
-  skillLevel: skillLevelEnum('skill_level').default('any'),
-  minAge: integer('min_age'), // Minimum preferred age for players
-  maxAge: integer('max_age'), // Maximum preferred age for players
-  organizationPreference: varchar('organization_preference', { length: 255 }), // e.g., "Google Alumni" or a specific company name
+    .default("any"),
+  skillLevel: skillLevelEnum("skill_level").default("any"),
+  minAge: integer("min_age"), // Minimum preferred age for players
+  maxAge: integer("max_age"), // Maximum preferred age for players
+  organizationPreference: varchar("organization_preference", { length: 255 }), // e.g., "Google Alumni" or a specific company name
 
-  sportId: uuid('sport_id')
+  sportId: uuid("sport_id")
     .references(() => sports.id)
     .notNull(),
 
   paymentSplitType:
-    paymentSplitTypeEnum('payment_split_type').default('split_evenly'),
+    paymentSplitTypeEnum("payment_split_type").default("split_evenly"),
 
-  inviteToken: uuid('invite_token').unique().defaultRandom(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  inviteToken: uuid("invite_token").unique().defaultRandom(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
 export const matchesRelations = relations(matches, ({ one, many }) => ({

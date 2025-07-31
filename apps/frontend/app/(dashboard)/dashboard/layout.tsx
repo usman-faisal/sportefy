@@ -27,9 +27,11 @@ async function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <UserProvider user={profile}>
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen w-full bg-background">
           {sidebarComponent}
-          <main className="flex-1 bg-gray-50">{children}</main>
+          <main className="flex-1 min-w-0 bg-muted/30 overflow-auto">
+            {children}
+          </main>
         </div>
       </UserProvider>
     </SidebarProvider>
