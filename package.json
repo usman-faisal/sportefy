@@ -3,24 +3,20 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "build:backend": "turbo run build --filter=backend...",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types"
   },
+  "dependencies": {
+    "typescript": "5.8.3"
+  },
   "devDependencies": {
     "prettier": "^3.6.2",
-    "turbo": "^2.5.5",
-    "typescript": "5.8.3"
+    "turbo": "^2.5.5"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {
     "node": ">=18"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
   }
 }
