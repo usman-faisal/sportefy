@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { Suspense } from "react";
 import { facilityService } from "@/lib/api/services";
 import { notFound } from "next/navigation";
@@ -26,7 +28,9 @@ async function getFacilityData(facilityId: string) {
   }
 }
 
-export default async function FacilityDetailPage({ params }: FacilityDetailPageProps) {
+export default async function FacilityDetailPage({
+  params,
+}: FacilityDetailPageProps) {
   const { facilityId } = await params;
   const data = await getFacilityData(facilityId);
 
@@ -39,4 +43,4 @@ export default async function FacilityDetailPage({ params }: FacilityDetailPageP
       <FacilityDetail facility={data.facility} />
     </Suspense>
   );
-} 
+}

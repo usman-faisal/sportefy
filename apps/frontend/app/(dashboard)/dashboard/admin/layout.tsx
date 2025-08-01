@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { profileService } from "@/lib/api/services";
 import { UserRole } from "@/lib/types";
 import { redirect } from "next/navigation";

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { Suspense } from "react";
 import { userService } from "@/lib/api/services";
 import { ProfileWithDetails } from "@/lib/api/types";

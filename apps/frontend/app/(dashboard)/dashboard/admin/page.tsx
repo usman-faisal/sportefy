@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { bookingService } from "@/lib/api/services";
 import React from "react";
 import { AlertTriangle } from "lucide-react";

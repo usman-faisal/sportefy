@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { Suspense } from "react";
 import { facilityService } from "@/lib/api/services";
 import FacilitiesTable from "@/components/common/facilities/facilities-table/facilities-table";
@@ -9,11 +11,13 @@ interface FacilitiesPageProps {
   }>;
 }
 
-async function getFacilitiesData(searchParams: Awaited<FacilitiesPageProps["searchParams"]>) {
+async function getFacilitiesData(
+  searchParams: Awaited<FacilitiesPageProps["searchParams"]>
+) {
   try {
     const page = searchParams.page ? parseInt(searchParams.page) : 1;
     const search = searchParams.search || "";
-    
+
     const response = await facilityService.getAllFacilities({
       page,
       limit: 10,
@@ -45,9 +49,12 @@ async function getFacilitiesData(searchParams: Awaited<FacilitiesPageProps["sear
   }
 }
 
-export default async function FacilitiesPage({ searchParams }: FacilitiesPageProps) {
+export default async function FacilitiesPage({
+  searchParams,
+}: FacilitiesPageProps) {
   const resolvedSearchParams = await searchParams;
-  const { facilities, pagination, error } = await getFacilitiesData(resolvedSearchParams);
+  const { facilities, pagination, error } =
+    await getFacilitiesData(resolvedSearchParams);
 
   return (
     <Suspense fallback={<div>Loading...</div>}>

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { Suspense } from "react";
 import { userService } from "@/lib/api/services";
 import UsersTable from "./components/users-table";
@@ -9,11 +11,13 @@ interface UsersPageProps {
   }>;
 }
 
-async function getUsersData(searchParams: Awaited<UsersPageProps["searchParams"]>) {
+async function getUsersData(
+  searchParams: Awaited<UsersPageProps["searchParams"]>
+) {
   try {
     const page = searchParams.page ? parseInt(searchParams.page) : 1;
     const search = searchParams.search || "";
-    
+
     const response = await userService.getAllUsers({
       page,
       limit: 10,
