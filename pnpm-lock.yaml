@@ -286,7 +286,6 @@ importers:
       drizzle-orm:
         specifier: latest
         version: 0.44.4(postgres@3.4.7)
-    devDependencies:
       typescript:
         specifier: ^5.5.3
         version: 5.8.3
