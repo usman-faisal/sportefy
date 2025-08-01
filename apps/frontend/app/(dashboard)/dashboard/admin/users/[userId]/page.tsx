@@ -4,9 +4,9 @@ import { ProfileWithDetails } from "@/lib/api/types";
 import UserDetail from "./components/user-detail";
 
 interface UserDetailPageProps {
-  params: {
+  params: Promise<{
     userId: string;
-  };
+  }>;
 }
 
 async function getUserData(userId: string) {
@@ -30,8 +30,8 @@ async function getUserData(userId: string) {
 }
 
 export default async function UserDetailPage({ params }: UserDetailPageProps) {
-  params = await params;
-  const { user, error } = await getUserData(params.userId);
+  const resolvedParams = await params;
+  const { user, error } = await getUserData(resolvedParams.userId);
 
   return (
     <Suspense fallback={<div>Loading...</div>}>

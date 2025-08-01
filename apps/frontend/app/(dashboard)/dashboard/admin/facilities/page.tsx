@@ -3,13 +3,13 @@ import { facilityService } from "@/lib/api/services";
 import FacilitiesTable from "@/components/common/facilities/facilities-table/facilities-table";
 
 interface FacilitiesPageProps {
-  searchParams: {
+  searchParams: Promise<{
     page?: string;
     search?: string;
-  };
+  }>;
 }
 
-async function getFacilitiesData(searchParams: FacilitiesPageProps["searchParams"]) {
+async function getFacilitiesData(searchParams: Awaited<FacilitiesPageProps["searchParams"]>) {
   try {
     const page = searchParams.page ? parseInt(searchParams.page) : 1;
     const search = searchParams.search || "";
@@ -46,8 +46,8 @@ async function getFacilitiesData(searchParams: FacilitiesPageProps["searchParams
 }
 
 export default async function FacilitiesPage({ searchParams }: FacilitiesPageProps) {
-  searchParams = await searchParams;
-  const { facilities, pagination, error } = await getFacilitiesData(searchParams);
+  const resolvedSearchParams = await searchParams;
+  const { facilities, pagination, error } = await getFacilitiesData(resolvedSearchParams);
 
   return (
     <Suspense fallback={<div>Loading...</div>}>

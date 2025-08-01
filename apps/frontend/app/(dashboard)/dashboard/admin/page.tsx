@@ -7,7 +7,7 @@ import AdminDashboardStats from "./components/admin-dashboard-stats";
 export default async function AdminDashboard({
   searchParams,
 }: {
-  searchParams: { page?: string; limit?: string; date?: string };
+  searchParams: Promise<{ page?: string; limit?: string; date?: string }>;
 }) {
   const params = await searchParams;
   const page = parseInt(params.page || "1");

@@ -4,16 +4,15 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --project tsconfig.json",
     "prebuild": "rm -rf dist"
   },
   "files": [
     "dist"
   ],
   "dependencies": {
-    "drizzle-orm": "latest"
-  },
-  "devDependencies": {
+    "drizzle-orm": "latest",
     "typescript": "^5.5.3"
-  }
+  },
+  "devDependencies": {}
 }

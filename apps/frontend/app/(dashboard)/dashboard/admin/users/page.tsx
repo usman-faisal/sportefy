@@ -3,13 +3,13 @@ import { userService } from "@/lib/api/services";
 import UsersTable from "./components/users-table";
 
 interface UsersPageProps {
-  searchParams: {
+  searchParams: Promise<{
     page?: string;
     search?: string;
-  };
+  }>;
 }
 
-async function getUsersData(searchParams: UsersPageProps["searchParams"]) {
+async function getUsersData(searchParams: Awaited<UsersPageProps["searchParams"]>) {
   try {
     const page = searchParams.page ? parseInt(searchParams.page) : 1;
     const search = searchParams.search || "";
@@ -46,8 +46,8 @@ async function getUsersData(searchParams: UsersPageProps["searchParams"]) {
 }
 
 export default async function UsersPage({ searchParams }: UsersPageProps) {
-  searchParams = await searchParams;
-  const { users, pagination, error } = await getUsersData(searchParams);
+  const resolvedSearchParams = await searchParams;
+  const { users, pagination, error } = await getUsersData(resolvedSearchParams);
 
   return (
     <Suspense fallback={<div>Loading...</div>}>

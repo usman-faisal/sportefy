@@ -4,9 +4,9 @@ import { notFound } from "next/navigation";
 import FacilityDetail from "@/components/common/facilities/facility-detail/facility-detail";
 
 interface FacilityDetailPageProps {
-  params: {
+  params: Promise<{
     facilityId: string;
-  };
+  }>;
 }
 
 async function getFacilityData(facilityId: string) {

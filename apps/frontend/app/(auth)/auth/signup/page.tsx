@@ -6,8 +6,9 @@ import { signUp } from "@/app/actions/auth-actions";
 export default async function SignUpPage({
   searchParams,
 }: {
-  searchParams: { message?: string };
+  searchParams: Promise<{ message?: string }>;
 }) {
+  const params = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -83,9 +84,9 @@ export default async function SignUpPage({
             </button>
           </div>
 
-          {searchParams?.message && (
+          {params?.message && (
             <div className="mt-4 text-center text-sm text-green-600">
-              {searchParams.message}
+              {params.message}
             </div>
           )}
         </form>

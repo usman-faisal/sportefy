@@ -3,14 +3,14 @@ import { facilityService } from "@/lib/api/services";
 import { notFound } from "next/navigation";
 
 interface EditFacilityPageProps {
-  params: {
+  params: Promise<{
     facilityId: string;
-  };
+  }>;
 }
 
 export default async function EditFacilityPage({ params }: EditFacilityPageProps) {
-    params = await params
-  const facility = await facilityService.getFacility(params.facilityId);
+  const resolvedParams = await params;
+  const facility = await facilityService.getFacility(resolvedParams.facilityId);
 
   if (!facility) {
     notFound();
