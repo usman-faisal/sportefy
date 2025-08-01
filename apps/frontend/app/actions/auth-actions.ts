@@ -29,7 +29,7 @@ export async function signIn(formData: FormData) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: 60 * 60 * 24 * 7, // 1 week
       path: "/",
     });
   }
@@ -47,9 +47,15 @@ export async function signUp(formData: FormData) {
 
   const supabase = await createClient();
 
-  const { data, error } = await supabase.auth.signUp({
+  const { error } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+        // This ensures the user is redirected to your site after email confirmation
+        emailRedirectTo: `${
+            process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+        }/auth/callback`,
+    }
   });
 
   if (error) {
@@ -99,5 +105,7 @@ export async function signInWithGoogle() {
     );
   }
 
-  redirect(data.url);
+  if (data.url) {
+    redirect(data.url);
+  }
 }
