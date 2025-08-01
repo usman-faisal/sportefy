@@ -1,6 +1,0 @@
-{
-  "buildCommand": "cd ../.. && pnpm install --frozen-lockfile && pnpm --filter @sportefy/db-types build && pnpm --filter frontend build",
-  "outputDirectory": "apps/frontend/.next",
-  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
-  "framework": "nextjs"
-}
