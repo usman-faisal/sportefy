@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: sportefy-backend
+    env: node
+    buildCommand: |
+      # Install dependencies for the entire monorepo
+      pnpm install
+      # Build the db-types package first
+      pnpm --filter @sportefy/db-types build
+      # Build the backend
+      pnpm --filter backend build
+    startCommand: pnpm --filter backend start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: PORT
+        value: 3000
+    # Optional: Run migrations after deployment
+    # postDeployCommand: pnpm --filter backend db:migrate:prod 

@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: sportefy-backend
-    env: node
-    buildCommand: pnpm install && pnpm run build
-    startCommand: pnpm run start:prod
-    envVars:
-      - key: NODE_ENV
-        value: production
