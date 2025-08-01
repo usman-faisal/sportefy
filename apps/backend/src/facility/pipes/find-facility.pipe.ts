@@ -21,8 +21,8 @@ export class FindFacilityPipe
       throw new NotFoundException('Facility ID is required');
     }
 
-    const facility = await this.facilityRepository.getFacility(
-      eq(facilities.id, facilityId),
+    const facility = await this.facilityRepository.getFacilityById(
+      facilityId
     );
 
     if (!facility) {

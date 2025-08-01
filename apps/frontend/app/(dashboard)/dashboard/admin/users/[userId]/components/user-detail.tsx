@@ -1,12 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Profile } from "@sportefy/db-types";
 import { ProfileWithDetails } from "@/lib/api/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft,
   User,
@@ -16,7 +14,8 @@ import {
   MapPin,
   Phone,
 } from "lucide-react";
-import BookingList from "@/components/common/booking-list";
+import BookingList from "@/components/common/bookings/booking-list/booking-list";
+import { toZonedTime} from "date-fns-tz";
 
 interface UserDetailProps {
   user: ProfileWithDetails | null;
@@ -27,14 +26,10 @@ export default function UserDetail({ user, error }: UserDetailProps) {
   const router = useRouter();
 
   const formatDate = (date: string | Date) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+    const inputDate = new Date(date);
+    const time = toZonedTime(inputDate, "Asia/Karachi");
+    return time.toDateString();
+};
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {

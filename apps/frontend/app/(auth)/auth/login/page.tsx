@@ -1,6 +1,5 @@
-// app/auth/login/page.tsx
-import { signIn } from "@/lib/auth/actions";
 import { redirect } from "next/navigation";
+import { signIn } from "@/app/actions/auth-actions";
 import { createClient } from "@/lib/supabase/server";
 import GoogleLoginButton from "@/components/auth/google-login-button";
 

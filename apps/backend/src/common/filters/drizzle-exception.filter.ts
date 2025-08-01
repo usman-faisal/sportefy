@@ -28,6 +28,7 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+    console.log(error)
 
     // If the error is already a standard NestJS HTTP exception, let the framework handle it.
     // This preserves exceptions like NotFoundException thrown from the service layer.

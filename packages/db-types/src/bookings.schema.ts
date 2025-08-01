@@ -26,7 +26,7 @@ export const bookings = pgTable('bookings', {
 
   venueId: uuid('venue_id')
     .notNull()
-    .references(() => venues.id),
+    .references(() => venues.id, {onDelete: 'cascade'}),
 
   bookedBy: uuid('booked_by')
     .notNull()

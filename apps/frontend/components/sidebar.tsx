@@ -28,7 +28,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { UserRole } from "@/lib/types";
-import { signOut } from "@/lib/auth/actions";
+import { signOut } from "@/app/actions/auth-actions";
 
 interface NavigationItem {
   href: string;

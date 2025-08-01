@@ -197,6 +197,7 @@ export class FacilityService {
    * @returns A success message.
    */
   async deleteFacility(user: Profile, facility: Facility) {
+    console.log(facility)
     await this.facilityRepository.deleteFacilityById(facility.id);
 
     this.logger.log(

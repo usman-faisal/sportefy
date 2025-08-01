@@ -31,7 +31,7 @@ export const venues = pgTable('venues', {
 
   facilityId: uuid('facility_id')
     .notNull()
-    .references(() => facilities.id),
+    .references(() => facilities.id, {onDelete: 'cascade'}),
 
   name: varchar({ length: 255 }),
 

@@ -3,8 +3,11 @@ import { api, apiPaginated, PaginatedResponse } from "./api";
 import {
   BookingOverview,
   UserScopeWithVenue,
-  BookingOverviewResponse,
   ProfileWithDetails,
+  FacilityWithRelations,
+  FacilityDetails,
+  UpdateFacilityDto,
+  CreateFacilityDto,
 } from "./types";
 
 export const userScopeService = {
@@ -58,3 +61,64 @@ export const userService = {
     return response?.data || null;
   },
 };
+
+
+export const facilityService = {
+  getAllFacilities: async (params?: {
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<PaginatedResponse<FacilityWithRelations> | null> => {
+    const response = await apiPaginated<FacilityWithRelations>("/facilities", params);
+    return response || null;
+  },
+
+  getFacility: async (facilityId: string): Promise<FacilityDetails | null> => {
+    const response = await api<FacilityDetails>(`/facilities/${facilityId}`);
+    return response?.data || null;
+  },
+
+  createFacility: async (
+    createData: CreateFacilityDto
+  ): Promise<FacilityDetails | null> => {
+    const response = await api<FacilityDetails>(
+      "/facilities", 
+      {
+        method: 'POST',
+        body: JSON.stringify(createData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    return response?.data || null;
+  },
+
+  updateFacility: async (
+    facilityId: string, 
+    updateData: UpdateFacilityDto
+  ): Promise<FacilityDetails | null> => {
+    const response = await api<FacilityDetails>(
+      `/facilities/${facilityId}`, 
+      {
+        method: 'PATCH',
+        body: JSON.stringify(updateData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    return response?.data || null;
+  },
+
+  deleteFacility: async (facilityId: string): Promise<boolean> => {
+    const response = await api<{ message: string }>(
+      `/facilities/${facilityId}`, 
+      {
+        method: 'DELETE',
+      }
+    );
+    return response?.success || false;
+  },
+
+}

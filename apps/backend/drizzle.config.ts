@@ -6,7 +6,7 @@ const envFile =
 dotenv.config({ path: envFile });
 
 export default {
-  schema: './@sportefy/db-types/',
+  schema: '../../packages/db-types/src/*.schema.ts',
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {

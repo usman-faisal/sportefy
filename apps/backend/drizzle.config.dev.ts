@@ -4,7 +4,7 @@ import * as dotenv from 'dotenv';
 dotenv.config({ path: '.env.development' });
 
 export default {
-  schema: './@sportefy/db-types/',
+  schema: '../../packages/db-types/src/*.schema.ts',
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {

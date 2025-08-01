@@ -57,6 +57,20 @@
       "when": 1753460631466,
       "tag": "0007_freezing_blob",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1754061419500,
+      "tag": "0008_amusing_spiral",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1754061706544,
+      "tag": "0009_soft_thunderbolt_ross",
+      "breakpoints": true
     }
   ]
 }

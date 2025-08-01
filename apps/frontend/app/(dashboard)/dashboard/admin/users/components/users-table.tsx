@@ -10,15 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/common/pagination"; 
 import { Search, Users, Eye } from "lucide-react";
-
-interface PaginationData {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrev: boolean;
-}
+import { formatDate } from "@/lib/utils";
+import { PaginationData } from "@/lib/api/types";
 
 interface UsersTableProps {
   initialUsers: Profile[];
@@ -36,13 +29,7 @@ export default function UsersTable({
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("search") || "");
 
-  const formatDate = (date: string | Date) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
