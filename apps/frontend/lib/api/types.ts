@@ -110,3 +110,12 @@ export interface CreateMediaDto {
   url: string;
   type: string;
 }
+
+
+export interface UserScopeWithFacilityAndVenue extends UserScope {
+  facility?: Facility;
+  venue?: Venue;
+}
+export interface ProfileWithScopes extends Profile {
+  userScopes?: UserScopeWithFacilityAndVenue[];
+}

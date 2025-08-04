@@ -12,8 +12,9 @@ import {
   Settings,
   LogOut,
   ClipboardList,
-  Bell,
   ScanLine,
+  MapPin,
+  ChevronDown,
 } from "lucide-react";
 import {
   Sidebar,
@@ -26,74 +27,260 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { UserRole } from "@/lib/types";
-import { signOut } from "@/app/actions/auth-actions";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { PermissionChecker } from "@/lib/utils/permissions";
+import { Facility, Venue, UserScope } from "@sportefy/db-types";
+import { ProfileWithScopes } from "@/lib/api/types";
+import { signOut } from "@/lib/actions/auth-actions";
 
 interface NavigationItem {
   href: string;
   icon: React.ElementType;
   label: string;
+  permission?: (permissions: PermissionChecker) => boolean;
+  children?: NavigationItem[];
 }
 
-const adminLinks: NavigationItem[] = [
-  { href: "/dashboard/admin", icon: Home, label: "Dashboard" },
+const globalAdminLinks: NavigationItem[] = [
+  { href: "/dashboard", icon: Home, label: "Dashboard" },
   {
-    href: "/dashboard/admin/payments",
+    href: "/dashboard/payments",
     icon: Shield,
     label: "Payment Verification",
   },
-  { href: "/dashboard/admin/users", icon: Users, label: "User Management" },
+  { href: "/dashboard/users", icon: Users, label: "User Management" },
   {
-    href: "/dashboard/admin/bookings",
+    href: "/dashboard/bookings",
     icon: ClipboardList,
-    label: "Booking Overview",
+    label: "All Bookings",
   },
   {
-    href: "/dashboard/admin/facilities",
+    href: "/dashboard/facilities",
     icon: Building,
     label: "All Facilities",
   },
-  { href: "/dashboard/admin/reports", icon: BarChart2, label: "Reports" },
+  {
+    href: "/dashboard/reports",
+    icon: BarChart2,
+    label: "Global Reports",
+  },
 ];
 
-const moderatorLinks: NavigationItem[] = [
+const staffLinks: NavigationItem[] = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
-  { href: "/dashboard/bookings", icon: ClipboardList, label: "My Bookings" },
-  { href: "/dashboard/check-in", icon: ScanLine, label: "Check-In Scanner" },
-  { href: "/dashboard/notifications", icon: Bell, label: "Notifications" },
+  {
+    href: "/dashboard/bookings",
+    icon: ClipboardList,
+    label: "Bookings",
+    permission: (p) => p.hasModeratorScope(),
+  },
+  {
+    href: "/dashboard/check-in",
+    icon: ScanLine,
+    label: "Check-In Scanner",
+    permission: (p) => p.hasModeratorScope(),
+  },
+  {
+    href: "/dashboard/facilities",
+    icon: Building,
+    label: "My Facilities",
+    permission: (p) => p.hasOwnerScope(),
+  },
+  {
+    href: "/dashboard/venues",
+    icon: MapPin,
+    label: "My Venues",
+    permission: (p) => p.hasModeratorScope(),
+  },
+  {
+    href: "/dashboard/reports",
+    icon: BarChart2,
+    label: "Reports",
+  },
 ];
-const getNavigationLinks = (userRole: UserRole): NavigationItem[] => {
+
+
+const getNavigationLinks = (
+  userRole: "admin" | "staff",
+  permissions: PermissionChecker
+): NavigationItem[] => {
   switch (userRole) {
     case "admin":
-      return adminLinks;
-    case "user":
-      return moderatorLinks;
-    default:
-      return moderatorLinks;
+      return permissions.isGlobalAdmin() ? globalAdminLinks : staffLinks;
+    case "staff":
+      return staffLinks;
+
   }
 };
 
-const getRoleDisplayName = (userRole: UserRole): string => {
-  switch (userRole) {
-    case "admin":
-      return "Admin Panel";
-    default:
-      return "Dashboard";
-  }
+const getRoleDisplayName = (
+  userRole: "admin" | "staff",
+  permissions: PermissionChecker
+): string => {
+  if (permissions.isGlobalAdmin()) return "Global Admin";
+  if (userRole === "admin" || userRole === "staff") return "Staff Panel";
+  return "Dashboard";
+};
+
+interface UserScopeWithFacilityAndVenue extends UserScope {
+  facility?: Facility;
+  venue?: Venue;
+}
+
+interface ScopeGroup {
+  type: "facility" | "venue";
+  id: string;
+  name: string;
+  role: string;
+  children?: ScopeGroup[];
+}
+
+const groupScopesByEntity = (
+  scopes: UserScopeWithFacilityAndVenue[]
+): ScopeGroup[] => {
+  const facilityMap = new Map<string, ScopeGroup>();
+  const venueMap = new Map<string, ScopeGroup>();
+
+  scopes.forEach((scope) => {
+    if (scope.facilityId && scope.facility) {
+      if (!facilityMap.has(scope.facilityId)) {
+        facilityMap.set(scope.facilityId, {
+          type: "facility",
+          id: scope.facilityId,
+          name: scope.facility.name || "Unnamed Facility",
+          role: scope.role,
+          children: [],
+        });
+      }
+    }
+
+    if (scope.venueId && scope.venue) {
+      const venueGroup: ScopeGroup = {
+        type: "venue",
+        id: scope.venueId,
+        name: scope.venue.name || "Unnamed Venue",
+        role: scope.role,
+      };
+
+      if (scope.venue.facilityId && facilityMap.has(scope.venue.facilityId)) {
+        facilityMap.get(scope.venue.facilityId)!.children!.push(venueGroup);
+      } else {
+        venueMap.set(scope.venueId, venueGroup);
+      }
+    }
+  });
+
+  return [...facilityMap.values(), ...venueMap.values()];
 };
 
 interface AppSidebarProps {
-  userRole: UserRole;
+  userRole: "admin" | "staff";
+  userScopes?: UserScopeWithFacilityAndVenue[];
+  user: ProfileWithScopes;
 }
 
-export function AppSidebar({ userRole }: AppSidebarProps) {
-  const navigationLinks = getNavigationLinks(userRole);
-  const roleDisplayName = getRoleDisplayName(userRole);
+export function AppSidebar({
+  userRole,
+  userScopes = [],
+  user,
+}: AppSidebarProps) {
+  const permissions = new PermissionChecker(user);
+  const navigationLinks = getNavigationLinks(userRole, permissions);
+  const roleDisplayName = getRoleDisplayName(userRole, permissions);
   const pathname = usePathname();
+  const scopeGroups = groupScopesByEntity(userScopes);
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  const renderNavigationItem = (item: NavigationItem) => {
+    if (item.permission && !item.permission(permissions)) {
+      return null;
+    }
+
+    return (
+      <SidebarMenuItem key={item.label}>
+        <SidebarMenuButton asChild isActive={pathname === item.href}>
+          <Link href={item.href} className="flex items-center gap-3">
+            <item.icon className="h-4 w-4" />
+            <span>{item.label}</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  };
+
+  const renderScopeGroup = (group: ScopeGroup) => {
+    const hasChildren = group.children && group.children.length > 0;
+
+    if (!hasChildren) {
+      return (
+        <SidebarMenuItem key={group.id}>
+          <SidebarMenuButton asChild>
+            <Link
+              href={`/dashboard/staff/${group.type}s/${group.id}`}
+              className="flex items-center gap-3"
+            >
+              {group.type === "facility" ? (
+                <Building className="h-4 w-4" />
+              ) : (
+                <MapPin className="h-4 w-4" />
+              )}
+              <span>{group.name}</span>
+              <span className="ml-auto text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                {group.role}
+              </span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      );
+    }
+
+    return (
+      <Collapsible key={group.id} defaultOpen>
+        <SidebarMenuItem>
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton className="flex items-center gap-3">
+              <Building className="h-4 w-4" />
+              <span>{group.name}</span>
+              <span className="ml-auto text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                {group.role}
+              </span>
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <SidebarMenuSub>
+              {group.children?.map((child) => (
+                <SidebarMenuSubItem key={child.id}>
+                  <SidebarMenuSubButton asChild>
+                    <Link
+                      href={`/dashboard/staff/venues/${child.id}`}
+                      className="flex items-center gap-3"
+                    >
+                      <MapPin className="h-4 w-4" />
+                      <span>{child.name}</span>
+                      <span className="ml-auto text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                        {child.role}
+                      </span>
+                    </Link>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              ))}
+            </SidebarMenuSub>
+          </CollapsibleContent>
+        </SidebarMenuItem>
+      </Collapsible>
+    );
   };
 
   return (
@@ -112,19 +299,22 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
           <SidebarGroupLabel>{roleDisplayName}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationLinks.map((item) => (
-                <SidebarMenuItem key={item.label}>
-                  <SidebarMenuButton asChild isActive={pathname === item.href}>
-                    <Link href={item.href} className="flex items-center gap-3">
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {navigationLinks.map(renderNavigationItem)}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Show scopes for staff users */}
+        {(userRole === "staff" ||
+          (userRole === "admin" && !permissions.isGlobalAdmin())) &&
+          scopeGroups.length > 0 && (
+            <SidebarGroup>
+              <SidebarGroupLabel>My Access</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>{scopeGroups.map(renderScopeGroup)}</SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">

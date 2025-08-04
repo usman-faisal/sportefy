@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { deleteFacility } from "@/app/actions/facility-actions";
+import { deleteFacility } from "@/lib/actions/facility-actions";
 
 interface FacilityDeleteDialogProps {
   isOpen: boolean;
@@ -42,12 +42,12 @@ export function FacilityDeleteDialog({
             Delete Facility
           </AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete <strong>{facilityName}</strong>? 
-            This action cannot be undone and will permanently remove all 
+            Are you sure you want to delete <strong>{facilityName}</strong>?
+            This action cannot be undone and will permanently remove all
             associated data including venues, bookings, and media.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        
+
         {state?.error && (
           <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded">
             {state.error}
@@ -59,10 +59,7 @@ export function FacilityDeleteDialog({
             Cancel
           </Button>
           <form action={formAction}>
-            <Button
-              type="submit"
-              variant="destructive"
-            >
+            <Button type="submit" variant="destructive">
               Delete Facility
             </Button>
           </form>

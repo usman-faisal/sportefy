@@ -3,7 +3,7 @@
 import React from "react";
 import { TrendingUp, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Pagination } from "../../../../../components/common/pagination";
+import { Pagination } from "@/components/common/pagination";
 import { BookingOverview } from "@/lib/api/types";
 import { CourtPerformanceItem } from "./court-performance-item";
 import { EmptyState } from "./empty-state";
@@ -18,10 +18,10 @@ interface CourtPerformanceOverviewProps {
   onPageChange: (page: number) => void;
 }
 
-export function CourtPerformanceOverview({ 
-  courts, 
-  pagination, 
-  onPageChange 
+export function CourtPerformanceOverview({
+  courts,
+  pagination,
+  onPageChange,
 }: CourtPerformanceOverviewProps) {
   return (
     <Card className="shadow-sm">
@@ -38,7 +38,7 @@ export function CourtPerformanceOverview({
       </CardHeader>
       <CardContent className="p-6">
         {courts.length === 0 ? (
-          <EmptyState 
+          <EmptyState
             icon={<AlertTriangle className="h-8 w-8 text-muted-foreground" />}
           />
         ) : (
@@ -66,4 +66,4 @@ export function CourtPerformanceOverview({
       )}
     </Card>
   );
-} 
+}

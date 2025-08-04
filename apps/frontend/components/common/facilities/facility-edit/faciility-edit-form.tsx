@@ -10,14 +10,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Building2, Save, X } from "lucide-react";
 import { FacilityDetails } from "@/lib/api/types";
-import { updateFacility } from "@/app/actions/facility-actions";
+import { updateFacility } from "@/lib/actions/facility-actions";
 
 interface FacilityEditFormProps {
   facility: FacilityDetails;
   onCancel: () => void;
 }
 
-export function FacilityEditForm({ facility, onCancel }: FacilityEditFormProps) {
+export function FacilityEditForm({
+  facility,
+  onCancel,
+}: FacilityEditFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +28,7 @@ export function FacilityEditForm({ facility, onCancel }: FacilityEditFormProps) 
   const handleSubmit = async (formData: FormData) => {
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
       const result = await updateFacility(facility.id, formData);
       if (result.success) {

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { signIn } from "@/app/actions/auth-actions";
+import { signIn } from "@/lib/actions/auth-actions";
 import { createClient } from "@/lib/supabase/server";
 import GoogleLoginButton from "@/components/auth/google-login-button";
 

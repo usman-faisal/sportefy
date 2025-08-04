@@ -5,10 +5,16 @@ import { CreateOperatingHourDto, CreateMediaDto } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2 } from "lucide-react";
-import { createFacility } from "@/app/actions/facility-actions";
+import { createFacility } from "@/lib/actions/facility-actions";
 import { useFormState } from "react-dom";
 
 interface FacilityCreateFormProps {
@@ -26,9 +32,9 @@ const DAYS_OF_WEEK = [
 ];
 
 export function FacilityCreateForm({ onCancel }: FacilityCreateFormProps) {
-  const [operatingHours, setOperatingHours] = useState<CreateOperatingHourDto[]>([
-    { dayOfWeek: 1, openTime: "09:00", closeTime: "17:00" }
-  ]);
+  const [operatingHours, setOperatingHours] = useState<
+    CreateOperatingHourDto[]
+  >([{ dayOfWeek: 1, openTime: "09:00", closeTime: "17:00" }]);
   const [media, setMedia] = useState<CreateMediaDto[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -36,11 +42,27 @@ export function FacilityCreateForm({ onCancel }: FacilityCreateFormProps) {
     const newErrors: Record<string, string> = {};
 
     const formData = new FormData();
-    formData.append("name", (document.getElementById("name") as HTMLInputElement)?.value || "");
-    formData.append("ownerId", (document.getElementById("ownerId") as HTMLInputElement)?.value || "");
-    formData.append("description", (document.getElementById("description") as HTMLTextAreaElement)?.value || "");
-    formData.append("phoneNumber", (document.getElementById("phoneNumber") as HTMLInputElement)?.value || "");
-    formData.append("address", (document.getElementById("address") as HTMLInputElement)?.value || "");
+    formData.append(
+      "name",
+      (document.getElementById("name") as HTMLInputElement)?.value || ""
+    );
+    formData.append(
+      "ownerId",
+      (document.getElementById("ownerId") as HTMLInputElement)?.value || ""
+    );
+    formData.append(
+      "description",
+      (document.getElementById("description") as HTMLTextAreaElement)?.value ||
+        ""
+    );
+    formData.append(
+      "phoneNumber",
+      (document.getElementById("phoneNumber") as HTMLInputElement)?.value || ""
+    );
+    formData.append(
+      "address",
+      (document.getElementById("address") as HTMLInputElement)?.value || ""
+    );
 
     if (!formData.get("name")) {
       newErrors.name = "Name is required";
@@ -64,17 +86,33 @@ export function FacilityCreateForm({ onCancel }: FacilityCreateFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     const formData = new FormData();
-    formData.append("name", (document.getElementById("name") as HTMLInputElement)?.value || "");
-    formData.append("ownerId", (document.getElementById("ownerId") as HTMLInputElement)?.value || "");
-    formData.append("description", (document.getElementById("description") as HTMLTextAreaElement)?.value || "");
-    formData.append("phoneNumber", (document.getElementById("phoneNumber") as HTMLInputElement)?.value || "");
-    formData.append("address", (document.getElementById("address") as HTMLInputElement)?.value || "");
+    formData.append(
+      "name",
+      (document.getElementById("name") as HTMLInputElement)?.value || ""
+    );
+    formData.append(
+      "ownerId",
+      (document.getElementById("ownerId") as HTMLInputElement)?.value || ""
+    );
+    formData.append(
+      "description",
+      (document.getElementById("description") as HTMLTextAreaElement)?.value ||
+        ""
+    );
+    formData.append(
+      "phoneNumber",
+      (document.getElementById("phoneNumber") as HTMLInputElement)?.value || ""
+    );
+    formData.append(
+      "address",
+      (document.getElementById("address") as HTMLInputElement)?.value || ""
+    );
     formData.append("operatingHours", JSON.stringify(operatingHours));
     formData.append("media", JSON.stringify(media));
 
@@ -82,7 +120,10 @@ export function FacilityCreateForm({ onCancel }: FacilityCreateFormProps) {
   };
 
   const addOperatingHour = () => {
-    setOperatingHours([...operatingHours, { dayOfWeek: 1, openTime: "09:00", closeTime: "17:00" }]);
+    setOperatingHours([
+      ...operatingHours,
+      { dayOfWeek: 1, openTime: "09:00", closeTime: "17:00" },
+    ]);
   };
 
   const removeOperatingHour = (index: number) => {
@@ -91,8 +132,12 @@ export function FacilityCreateForm({ onCancel }: FacilityCreateFormProps) {
     }
   };
 
-  const updateOperatingHour = (index: number, field: keyof CreateOperatingHourDto, value: string | number) => {
-    const newHours = operatingHours.map((hour, i) => 
+  const updateOperatingHour = (
+    index: number,
+    field: keyof CreateOperatingHourDto,
+    value: string | number
+  ) => {
+    const newHours = operatingHours.map((hour, i) =>
       i === index ? { ...hour, [field]: value } : hour
     );
     setOperatingHours(newHours);
@@ -106,8 +151,12 @@ export function FacilityCreateForm({ onCancel }: FacilityCreateFormProps) {
     setMedia(media.filter((_, i) => i !== index));
   };
 
-  const updateMedia = (index: number, field: keyof CreateMediaDto, value: string) => {
-    const newMedia = media.map((item, i) => 
+  const updateMedia = (
+    index: number,
+    field: keyof CreateMediaDto,
+    value: string
+  ) => {
+    const newMedia = media.map((item, i) =>
       i === index ? { ...item, [field]: value } : item
     );
     setMedia(newMedia);
@@ -118,17 +167,15 @@ export function FacilityCreateForm({ onCancel }: FacilityCreateFormProps) {
       <Card>
         <CardHeader>
           <CardTitle>Basic Information</CardTitle>
-          <CardDescription>Enter the basic details of the facility</CardDescription>
+          <CardDescription>
+            Enter the basic details of the facility
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Facility Name</Label>
-              <Input
-                id="name"
-                name="name"
-                placeholder="Enter facility name"
-              />
+              <Input id="name" name="name" placeholder="Enter facility name" />
               {errors.name && (
                 <p className="text-sm text-red-500">{errors.name}</p>
               )}
@@ -191,17 +238,28 @@ export function FacilityCreateForm({ onCancel }: FacilityCreateFormProps) {
       <Card>
         <CardHeader>
           <CardTitle>Operating Hours</CardTitle>
-          <CardDescription>Set the operating hours for each day of the week</CardDescription>
+          <CardDescription>
+            Set the operating hours for each day of the week
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {operatingHours.map((hour, index) => (
-            <div key={index} className="flex items-center gap-4 p-4 border rounded-lg">
+            <div
+              key={index}
+              className="flex items-center gap-4 p-4 border rounded-lg"
+            >
               <div className="flex-1 grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label>Day</Label>
                   <select
                     value={hour.dayOfWeek}
-                    onChange={(e) => updateOperatingHour(index, "dayOfWeek", parseInt(e.target.value))}
+                    onChange={(e) =>
+                      updateOperatingHour(
+                        index,
+                        "dayOfWeek",
+                        parseInt(e.target.value)
+                      )
+                    }
                     className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm"
                   >
                     {DAYS_OF_WEEK.map((day) => (
@@ -217,7 +275,9 @@ export function FacilityCreateForm({ onCancel }: FacilityCreateFormProps) {
                   <Input
                     type="time"
                     value={hour.openTime}
-                    onChange={(e) => updateOperatingHour(index, "openTime", e.target.value)}
+                    onChange={(e) =>
+                      updateOperatingHour(index, "openTime", e.target.value)
+                    }
                   />
                 </div>
 
@@ -226,7 +286,9 @@ export function FacilityCreateForm({ onCancel }: FacilityCreateFormProps) {
                   <Input
                     type="time"
                     value={hour.closeTime}
-                    onChange={(e) => updateOperatingHour(index, "closeTime", e.target.value)}
+                    onChange={(e) =>
+                      updateOperatingHour(index, "closeTime", e.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -258,7 +320,10 @@ export function FacilityCreateForm({ onCancel }: FacilityCreateFormProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           {media.map((item, index) => (
-            <div key={index} className="flex items-center gap-4 p-4 border rounded-lg">
+            <div
+              key={index}
+              className="flex items-center gap-4 p-4 border rounded-lg"
+            >
               <div className="flex-1 grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>URL</Label>
@@ -302,10 +367,8 @@ export function FacilityCreateForm({ onCancel }: FacilityCreateFormProps) {
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit">
-          Create Facility
-        </Button>
+        <Button type="submit">Create Facility</Button>
       </div>
     </form>
   );
-} 
+}

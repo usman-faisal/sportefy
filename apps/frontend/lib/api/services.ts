@@ -8,6 +8,7 @@ import {
   FacilityDetails,
   UpdateFacilityDto,
   CreateFacilityDto,
+  ProfileWithScopes,
 } from "./types";
 
 export const userScopeService = {
@@ -21,6 +22,11 @@ export const profileService = {
     const response = await api<Profile>("/profile/me");
     return response?.data || null;
   },
+  
+  getProfileWithScopes: async (): Promise<ProfileWithScopes | null> => {
+    const response = await api<ProfileWithScopes>("/profile/me-with-scopes");
+    return response?.data || null;
+  }
 };
 
 export const bookingService = {
