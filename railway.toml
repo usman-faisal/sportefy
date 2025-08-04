@@ -1,0 +1,25 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "pnpm --filter backend start:prod"
+healthcheckPath = "/"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+
+[[services]]
+name = "sportefy-backend"
+
+[services.sportefy-backend.build]
+buildCommand = [
+  "pnpm install",
+  "pnpm --filter @sportefy/db-types build", 
+  "pnpm --filter backend build"
+]
+
+[services.sportefy-backend.deploy]
+startCommand = "pnpm --filter backend start:prod"
+
+[services.sportefy-backend.variables]
+NODE_ENV = "production"
+PORT = "3000"

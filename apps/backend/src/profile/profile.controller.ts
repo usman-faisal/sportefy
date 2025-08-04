@@ -28,6 +28,12 @@ export class ProfileController {
   }
 
   @Auth(UserRole.ADMIN, UserRole.USER)
+  @Get('me-with-scopes')
+  async getProfileWithScopes(@CurrentUser() user: Profile) {
+    return this.profileService.getProfileWithScopes(user.id);
+  }
+
+  @Auth(UserRole.ADMIN, UserRole.USER)
   @ApiBody({
     type: UpdateProfileDto,
     required: true,
