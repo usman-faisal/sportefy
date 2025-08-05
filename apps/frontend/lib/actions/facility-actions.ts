@@ -2,74 +2,181 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { facilityService } from "@/lib/api/services";
-import { UpdateFacilityDto, CreateFacilityDto } from "@/lib/api/types";
+import {
+  facilityService,
+  operatingHourService,
+  facilityMediaService,
+} from "@/lib/api/services";
+import { Scope, DayOfWeek } from "../types";
+import { CreateOperatingHourDto } from "../api/types";
 
-export async function createFacility(formData: FormData) {
+type FacilityCreateData = {
+  name: string;
+  ownerId: string;
+  description: string;
+  phoneNumber: string;
+  address: string;
+  operatingHours: Array<{
+    dayOfWeek: DayOfWeek;
+    openTime: string;
+    closeTime: string;
+  }>;
+  media: Array<{
+    url: string;
+    type: string;
+  }>;
+};
+
+type FacilityUpdateData = {
+  name?: string;
+  description?: string;
+  phoneNumber?: string;
+  address?: string;
+  operatingHours: Array<{
+    id?: number;
+    dayOfWeek: DayOfWeek;
+    openTime: string;
+    closeTime: string;
+  }>;
+  media: Array<{
+    id?: string;
+    url: string;
+    type: string;
+  }>;
+};
+
+export async function createFacility(data: FacilityCreateData) {
   try {
-    const createData: CreateFacilityDto = {
-      name: formData.get("name") as string,
-      ownerId: formData.get("ownerId") as string,
-      description: formData.get("description") as string,
-      phoneNumber: formData.get("phoneNumber") as string,
-      address: formData.get("address") as string,
-      operatingHours: JSON.parse(formData.get("operatingHours") as string || "[]"),
-      media: JSON.parse(formData.get("media") as string || "[]"),
+    if (!data.ownerId) {
+      throw new Error("Owner ID is required to create a facility.");
+    }
+
+    const createPayload = {
+      name: data.name,
+      ownerId: data.ownerId,
+      description: data.description,
+      phoneNumber: data.phoneNumber,
+      address: data.address,
+      operatingHours: data.operatingHours,
+      media: data.media.map((m) => ({
+        mediaLink: m.url,
+        mediaType: m.type,
+      })),
     };
 
-    const result = await facilityService.createFacility(createData);
-    
-    if (result) {
-      revalidatePath("/dashboard/admin/facilities");
-      redirect(`/dashboard/admin/facilities/${result.id}`);
-    } else {
-      return { error: "Failed to create facility" };
+    const result = await facilityService.createFacility(createPayload);
+
+    if (!result) {
+      return { success: false, error: "API failed to create facility" };
     }
   } catch (error) {
     console.error("Error creating facility:", error);
-    return { error: "An error occurred while creating the facility" };
+    const errorMessage =
+      error instanceof Error ? error.message : "An unknown error occurred.";
+    return { success: false, error: errorMessage };
   }
+  revalidatePath("/dashboard/admin/facilities");
+  redirect(`/dashboard/admin/facilities`);
 }
 
 export async function updateFacility(
   facilityId: string,
-  formData: FormData
+  data: FacilityUpdateData
 ) {
   try {
-    const updateData: UpdateFacilityDto = {
-      name: formData.get("name") as string,
-      description: formData.get("description") as string,
-      address: formData.get("address") as string,
-      phoneNumber: formData.get("phoneNumber") as string,
-    };
+    const facilityUpdatePromise = facilityService.updateFacility(facilityId, {
+      name: data.name,
+      description: data.description,
+      phoneNumber: data.phoneNumber,
+      address: data.address,
+    });
 
-    const result = await facilityService.updateFacility(facilityId, updateData);
-    
-    if (result) {
-      revalidatePath(`/dashboard/admin/facilities/${facilityId}`);
-      return { success: true, facilityId };
-    } else {
-      return { error: "Failed to update facility" };
-    }
+    const initialHours =
+      (await operatingHourService.getOperatingHours(
+        facilityId,
+        Scope.FACILITY
+      )) || [];
+    const initialMedia =
+      (await facilityMediaService.getMedia(facilityId, Scope.FACILITY)) || [];
+
+    const hourIdsToDelete = initialHours
+      .filter((ih) => !data.operatingHours.find((h) => h.id === ih.id))
+      .map((h) => h.id);
+
+    const hoursToUpdate = data.operatingHours.filter(
+      (h) => h.id && initialHours.some((ih) => ih.id === h.id)
+    );
+
+    const hoursToAdd = data.operatingHours.filter((h) => !h.id);
+
+    const mediaIdsToDelete = initialMedia
+      .filter((im) => !data.media.find((m) => m.id === im.id))
+      .map((m) => m.id);
+
+    const mediaToAdd = data.media.filter((m) => !m.id);
+
+    const promises = [
+      facilityUpdatePromise,
+
+      ...hourIdsToDelete.map((id) =>
+        operatingHourService.deleteOperatingHour(facilityId, Scope.FACILITY, id)
+      ),
+      ...hoursToUpdate.map((h) =>
+        operatingHourService.updateOperatingHour(
+          facilityId,
+          Scope.FACILITY,
+          h.id!,
+          {
+            dayOfWeek: h.dayOfWeek,
+            openTime: h.openTime,
+            closeTime: h.closeTime,
+          }
+        )
+      ),
+      ...hoursToAdd.map((h) =>
+        operatingHourService.addOperatingHour(facilityId, Scope.FACILITY, {
+          dayOfWeek: h.dayOfWeek,
+          openTime: h.openTime,
+          closeTime: h.closeTime,
+        } as CreateOperatingHourDto)
+      ),
+
+      ...mediaIdsToDelete.map((id) =>
+        facilityMediaService.deleteMedia(facilityId, Scope.FACILITY, id)
+      ),
+      ...mediaToAdd.map((m) =>
+        facilityMediaService.addMedia(facilityId, Scope.FACILITY, {
+          mediaLink: m.url,
+          mediaType: m.type,
+        })
+      ),
+    ];
+
+    await Promise.all(promises);
+
+    revalidatePath(`/dashboard/facilities/${facilityId}`);
+    revalidatePath(`/dashboard/admin/facilities`);
+
+    return { success: true };
   } catch (error) {
     console.error("Error updating facility:", error);
-    return { error: "An error occurred while updating the facility" };
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to update facility.";
+    return { success: false, error: errorMessage };
   }
 }
 
 export async function deleteFacility(facilityId: string) {
   try {
-    console.log(facilityId, "Deleting facility with ID");
-    const success = await facilityService.deleteFacility(facilityId);
-    
-    if (success) {
-      revalidatePath("/dashboard/admin/facilities");
-      redirect("/dashboard/admin/facilities");
-    } else {
-      return { error: "Failed to delete facility" };
-    }
+    await facilityService.deleteFacility(facilityId);
+    revalidatePath("/dashboard/admin/facilities");
   } catch (error) {
     console.error("Error deleting facility:", error);
-    return { error: "An error occurred while deleting the facility" };
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : "An error occurred while deleting the facility.";
+    return { success: false, error: errorMessage };
   }
+  redirect("/dashboard/admin/facilities");
 }

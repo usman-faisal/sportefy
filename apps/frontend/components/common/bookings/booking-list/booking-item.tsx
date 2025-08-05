@@ -10,20 +10,11 @@ import { BookingStatusBadge } from "./booking-status-badge";
 interface BookingItemProps {
   booking: BookingWithRelations;
   onViewDetails?: (booking: BookingWithRelations) => void;
-  onCancel?: (booking: BookingWithRelations) => void;
 }
 
-export function BookingItem({ 
-  booking, 
-  onViewDetails, 
-  onCancel 
-}: BookingItemProps) {
+export function BookingItem({ booking, onViewDetails }: BookingItemProps) {
   const handleViewDetails = () => {
     onViewDetails?.(booking);
-  };
-
-  const handleCancel = () => {
-    onCancel?.(booking);
   };
 
   return (
@@ -72,11 +63,10 @@ export function BookingItem({
           View Details
         </Button>
         {booking.status === "pending" && (
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="text-red-600 hover:text-red-700"
-            onClick={handleCancel}
           >
             Cancel
           </Button>
@@ -84,4 +74,4 @@ export function BookingItem({
       </div>
     </div>
   );
-} 
+}

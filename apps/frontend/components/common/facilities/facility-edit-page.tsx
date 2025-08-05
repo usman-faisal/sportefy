@@ -21,7 +21,6 @@ export function FacilityEditPage({ facility }: FacilityEditPageProps) {
     router.push(`/dashboard/admin/  facilities/${facility.id}`);
   };
 
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-4">
@@ -33,15 +32,14 @@ export function FacilityEditPage({ facility }: FacilityEditPageProps) {
           <h1 className="text-3xl font-bold tracking-tight">
             Edit {facility.name}
           </h1>
-          <p className="text-muted-foreground">
-            Update facility information
-          </p>
+          <p className="text-muted-foreground">Update facility information</p>
         </div>
       </div>
 
       <FacilityEditForm
         facility={facility}
-        onCancel={handleBack}
+        initialOperatingHours={facility.operatingHours}
+        initialMedia={facility.media}
       />
     </div>
   );

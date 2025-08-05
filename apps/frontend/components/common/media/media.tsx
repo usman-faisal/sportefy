@@ -9,7 +9,7 @@ interface MediaProps {
 
 export function Media({ media }: MediaProps) {
   return (
-    <Card>
+    <Card> 
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ImageIcon className="h-5 w-5" />

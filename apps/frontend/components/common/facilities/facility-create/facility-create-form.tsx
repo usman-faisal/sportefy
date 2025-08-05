@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { CreateOperatingHourDto, CreateMediaDto } from "@/lib/api/types";
+import { useRouter } from "next/navigation";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,363 +15,377 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { createFacility } from "@/lib/actions/facility-actions";
-import { useFormState } from "react-dom";
+import { OwnerSearch } from "./owner-search";
+import { DayOfWeek, MediaEntityType } from "@/lib/types";
+import { MediaUploader } from "../../media/media-uploader";
 
-interface FacilityCreateFormProps {
-  onCancel: () => void;
-}
+const facilitySchema = z.object({
+  name: z.string().min(1, "Facility name is required"),
+  ownerId: z
+    .string()
+    .uuid(
+      "Valid owner ID is required. Please select an owner from the search."
+    ),
+  description: z
+    .string()
+    .min(1, "Description is required")
+    .max(500, "Description must be less than 500 characters"),
+  phoneNumber: z.string().min(1, "Phone number is required"),
+  address: z.string().min(1, "Address is required"),
+  operatingHours: z
+    .array(
+      z.object({
+        dayOfWeek: z.nativeEnum(DayOfWeek),
+        openTime: z
+          .string()
+          .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
+        closeTime: z
+          .string()
+          .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
+      })
+    )
+    .min(1, "At least one operating hour is required"),
+  media: z.array(
+    z.object({
+      url: z.string().url("Invalid URL format").or(z.literal("")),
+      type: z.string().min(1, "Media type is required"),
+    })
+  ),
+});
 
-const DAYS_OF_WEEK = [
-  { value: 0, label: "Sunday" },
-  { value: 1, label: "Monday" },
-  { value: 2, label: "Tuesday" },
-  { value: 3, label: "Wednesday" },
-  { value: 4, label: "Thursday" },
-  { value: 5, label: "Friday" },
-  { value: 6, label: "Saturday" },
-];
+type FacilityFormData = z.infer<typeof facilitySchema>;
 
-export function FacilityCreateForm({ onCancel }: FacilityCreateFormProps) {
-  const [operatingHours, setOperatingHours] = useState<
-    CreateOperatingHourDto[]
-  >([{ dayOfWeek: 1, openTime: "09:00", closeTime: "17:00" }]);
-  const [media, setMedia] = useState<CreateMediaDto[]>([]);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+export function FacilityCreateForm() {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+  const form = useForm<FacilityFormData>({
+    resolver: zodResolver(facilitySchema),
+    defaultValues: {
+      name: "",
+      ownerId: "",
+      description: "",
+      phoneNumber: "",
+      address: "",
+      operatingHours: [
+        { dayOfWeek: DayOfWeek.MONDAY, openTime: "09:00", closeTime: "17:00" },
+      ],
+      media: [],
+    },
+  });
 
-    const formData = new FormData();
-    formData.append(
-      "name",
-      (document.getElementById("name") as HTMLInputElement)?.value || ""
-    );
-    formData.append(
-      "ownerId",
-      (document.getElementById("ownerId") as HTMLInputElement)?.value || ""
-    );
-    formData.append(
-      "description",
-      (document.getElementById("description") as HTMLTextAreaElement)?.value ||
-        ""
-    );
-    formData.append(
-      "phoneNumber",
-      (document.getElementById("phoneNumber") as HTMLInputElement)?.value || ""
-    );
-    formData.append(
-      "address",
-      (document.getElementById("address") as HTMLInputElement)?.value || ""
-    );
+  const {
+    fields: operatingHoursFields,
+    append: appendOperatingHour,
+    remove: removeOperatingHour,
+  } = useFieldArray({
+    control: form.control,
+    name: "operatingHours",
+  });
 
-    if (!formData.get("name")) {
-      newErrors.name = "Name is required";
-    }
-    if (!formData.get("ownerId")) {
-      newErrors.ownerId = "Owner ID is required";
-    }
-    if (!formData.get("description")) {
-      newErrors.description = "Description is required";
-    }
-    if (!formData.get("phoneNumber")) {
-      newErrors.phoneNumber = "Phone number is required";
-    }
-    if (!formData.get("address")) {
-      newErrors.address = "Address is required";
-    }
+  const {
+    fields: mediaFields,
+    append: appendMedia,
+    remove: removeMedia,
+  } = useFieldArray({
+    control: form.control,
+    name: "media",
+  });
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleOwnerSelect = (ownerId: string) => {
+    form.setValue("ownerId", ownerId, { shouldValidate: true });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
+  const onSubmit = async (data: FacilityFormData) => {
+    setError(null);
+    const result = await createFacility(data);
+    if (result?.error) {
+      setError(result.error);
     }
-
-    const formData = new FormData();
-    formData.append(
-      "name",
-      (document.getElementById("name") as HTMLInputElement)?.value || ""
-    );
-    formData.append(
-      "ownerId",
-      (document.getElementById("ownerId") as HTMLInputElement)?.value || ""
-    );
-    formData.append(
-      "description",
-      (document.getElementById("description") as HTMLTextAreaElement)?.value ||
-        ""
-    );
-    formData.append(
-      "phoneNumber",
-      (document.getElementById("phoneNumber") as HTMLInputElement)?.value || ""
-    );
-    formData.append(
-      "address",
-      (document.getElementById("address") as HTMLInputElement)?.value || ""
-    );
-    formData.append("operatingHours", JSON.stringify(operatingHours));
-    formData.append("media", JSON.stringify(media));
-
-    await createFacility(formData);
-  };
-
-  const addOperatingHour = () => {
-    setOperatingHours([
-      ...operatingHours,
-      { dayOfWeek: 1, openTime: "09:00", closeTime: "17:00" },
-    ]);
-  };
-
-  const removeOperatingHour = (index: number) => {
-    if (operatingHours.length > 1) {
-      setOperatingHours(operatingHours.filter((_, i) => i !== index));
-    }
-  };
-
-  const updateOperatingHour = (
-    index: number,
-    field: keyof CreateOperatingHourDto,
-    value: string | number
-  ) => {
-    const newHours = operatingHours.map((hour, i) =>
-      i === index ? { ...hour, [field]: value } : hour
-    );
-    setOperatingHours(newHours);
-  };
-
-  const addMedia = () => {
-    setMedia([...media, { url: "", type: "" }]);
-  };
-
-  const removeMedia = (index: number) => {
-    setMedia(media.filter((_, i) => i !== index));
-  };
-
-  const updateMedia = (
-    index: number,
-    field: keyof CreateMediaDto,
-    value: string
-  ) => {
-    const newMedia = media.map((item, i) =>
-      i === index ? { ...item, [field]: value } : item
-    );
-    setMedia(newMedia);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
-          <CardDescription>
-            Enter the basic details of the facility
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Facility Name</Label>
-              <Input id="name" name="name" placeholder="Enter facility name" />
-              {errors.name && (
-                <p className="text-sm text-red-500">{errors.name}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="ownerId">Owner ID</Label>
-              <Input
-                id="ownerId"
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {error && (
+          <div className="p-3 text-sm text-red-500 bg-red-100 border border-red-200 rounded-md">
+            {error}
+          </div>
+        )}
+        <Card>
+          <CardHeader>
+            <CardTitle>Basic Information</CardTitle>
+            <CardDescription>
+              Enter the basic details of the facility
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Facility Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter facility name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="ownerId"
-                placeholder="Enter owner UUID"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Owner</FormLabel>
+                    <FormControl>
+                      <OwnerSearch onOwnerSelect={handleOwnerSelect} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {errors.ownerId && (
-                <p className="text-sm text-red-500">{errors.ownerId}</p>
-              )}
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
+            <FormField
+              control={form.control}
               name="description"
-              placeholder="Enter facility description"
-              rows={3}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Enter facility description"
+                      rows={3}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {errors.description && (
-              <p className="text-sm text-red-500">{errors.description}</p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="phoneNumber">Phone Number</Label>
-              <Input
-                id="phoneNumber"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
                 name="phoneNumber"
-                placeholder="Enter phone number"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter phone number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {errors.phoneNumber && (
-                <p className="text-sm text-red-500">{errors.phoneNumber}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="address">Address</Label>
-              <Input
-                id="address"
+              <FormField
+                control={form.control}
                 name="address"
-                placeholder="Enter facility address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter facility address" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {errors.address && (
-                <p className="text-sm text-red-500">{errors.address}</p>
-              )}
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Operating Hours</CardTitle>
-          <CardDescription>
-            Set the operating hours for each day of the week
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {operatingHours.map((hour, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-4 p-4 border rounded-lg"
-            >
-              <div className="flex-1 grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Day</Label>
-                  <select
-                    value={hour.dayOfWeek}
-                    onChange={(e) =>
-                      updateOperatingHour(
-                        index,
-                        "dayOfWeek",
-                        parseInt(e.target.value)
-                      )
-                    }
-                    className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm"
-                  >
-                    {DAYS_OF_WEEK.map((day) => (
-                      <option key={day.value} value={day.value}>
-                        {day.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Open Time</Label>
-                  <Input
-                    type="time"
-                    value={hour.openTime}
-                    onChange={(e) =>
-                      updateOperatingHour(index, "openTime", e.target.value)
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Close Time</Label>
-                  <Input
-                    type="time"
-                    value={hour.closeTime}
-                    onChange={(e) =>
-                      updateOperatingHour(index, "closeTime", e.target.value)
-                    }
-                  />
-                </div>
-              </div>
-
-              {operatingHours.length > 1 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => removeOperatingHour(index)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          ))}
-
-          <Button type="button" variant="outline" onClick={addOperatingHour}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Operating Hour
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Media</CardTitle>
-          <CardDescription>Add media files for the facility</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {media.map((item, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-4 p-4 border rounded-lg"
-            >
-              <div className="flex-1 grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>URL</Label>
-                  <Input
-                    type="url"
-                    value={item.url}
-                    onChange={(e) => updateMedia(index, "url", e.target.value)}
-                    placeholder="Enter media URL"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Type</Label>
-                  <Input
-                    value={item.type}
-                    onChange={(e) => updateMedia(index, "type", e.target.value)}
-                    placeholder="Enter media type"
-                  />
-                </div>
-              </div>
-
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              Operating Hours
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => removeMedia(index)}
+                onClick={() =>
+                  appendOperatingHour({
+                    dayOfWeek: DayOfWeek.MONDAY,
+                    openTime: "09:00",
+                    closeTime: "17:00",
+                  })
+                }
               >
-                <Trash2 className="h-4 w-4" />
+                <Plus className="h-4 w-4 mr-2" />
+                Add
               </Button>
-            </div>
-          ))}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {operatingHoursFields.map((field, index) => (
+              <div
+                key={field.id}
+                className="flex items-center gap-4 p-4 border rounded-lg"
+              >
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name={`operatingHours.${index}.dayOfWeek`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Day</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select day" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Object.values(DayOfWeek).map((day) => (
+                              <SelectItem key={day} value={day}>
+                                {day}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`operatingHours.${index}.openTime`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Open Time</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`operatingHours.${index}.closeTime`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Close Time</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                {operatingHoursFields.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeOperatingHour(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
 
-          <Button type="button" variant="outline" onClick={addMedia}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Media
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              Media
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => appendMedia({ url: "", type: "image" })}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Media Slot
+              </Button>
+            </CardTitle>
+            <CardDescription>
+              Upload images or videos for the facility.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {mediaFields.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>No media slots added yet.</p>
+              </div>
+            ) : (
+              mediaFields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className="flex items-start gap-4 p-4 border rounded-lg"
+                >
+                  <div className="flex-1">
+                    <MediaUploader
+                      initialUrl={field.url}
+                      mediaEntityType={MediaEntityType.FACILITY}
+                      onUploadComplete={(url, type) => {
+                        form.setValue(`media.${index}.url`, url, {
+                          shouldValidate: true,
+                        });
+                        form.setValue(`media.${index}.type`, type);
+                      }}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`media.${index}.url`}
+                      render={({ field }) => (
+                        <FormItem className="hidden">
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeMedia(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end gap-4">
+          <Button type="button" variant="outline" onClick={() => router.back()}>
+            Cancel
           </Button>
-        </CardContent>
-      </Card>
-
-      <div className="flex justify-end gap-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit">Create Facility</Button>
-      </div>
-    </form>
+          <Button type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? "Creating..." : "Create Facility"}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

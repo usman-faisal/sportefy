@@ -8,7 +8,10 @@ interface FacilitiesEmptyStateProps {
   onAddFacility?: () => void;
 }
 
-export function FacilitiesEmptyState({ searchQuery, onAddFacility }: FacilitiesEmptyStateProps) {
+export function FacilitiesEmptyState({
+  searchQuery,
+  onAddFacility,
+}: FacilitiesEmptyStateProps) {
   return (
     <Card>
       <CardContent className="p-8">
@@ -16,10 +19,9 @@ export function FacilitiesEmptyState({ searchQuery, onAddFacility }: FacilitiesE
           <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">No facilities found</h3>
           <p className="text-muted-foreground mb-4">
-            {searchQuery 
+            {searchQuery
               ? "No facilities match your search criteria."
-              : "Get started by adding your first facility."
-            }
+              : "Get started by adding your first facility."}
           </p>
           {!searchQuery && (
             <Button onClick={onAddFacility}>

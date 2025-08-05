@@ -27,7 +27,7 @@ export default function FacilityDetail({ facility }: FacilityDetailProps) {
   };
 
   const handleEdit = () => {
-    router.push(`/dashboard/admin/facilities/${facility.id}/edit`);
+    router.push(`/dashboard/facilities/${facility.id}/edit`);
   };
 
   const handleDelete = () => {

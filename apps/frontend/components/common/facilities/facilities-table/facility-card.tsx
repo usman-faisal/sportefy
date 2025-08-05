@@ -11,7 +11,7 @@ interface FacilityCardProps {
   onEdit?: (facilityId: string) => void;
 }
 
-export function FacilityCard({ facility, onViewDetails, onEdit }: FacilityCardProps) {
+export function FacilityCard({ facility, onViewDetails }: FacilityCardProps) {
   const formatDate = (dateString: string | Date | null) => {
     if (!dateString) return "Unknown date";
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -62,7 +62,11 @@ export function FacilityCard({ facility, onViewDetails, onEdit }: FacilityCardPr
                     <span className="text-sm font-medium">Sports:</span>
                     <div className="flex gap-1">
                       {facility.venue.sports.slice(0, 3).map((sport, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="text-xs"
+                        >
                           {sport.name}
                         </Badge>
                       ))}
@@ -79,20 +83,13 @@ export function FacilityCard({ facility, onViewDetails, onEdit }: FacilityCardPr
           </div>
 
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={() => onViewDetails(facility.id)}
             >
               <Eye className="h-4 w-4 mr-2" />
               View Details
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => onEdit?.(facility.id)}
-            >
-              Edit
             </Button>
           </div>
         </div>

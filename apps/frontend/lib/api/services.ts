@@ -1,4 +1,4 @@
-import { Profile } from "@sportefy/db-types";
+import { Media, OperatingHour, Profile } from "@sportefy/db-types";
 import { api, apiPaginated, PaginatedResponse } from "./api";
 import {
   BookingOverview,
@@ -9,7 +9,9 @@ import {
   UpdateFacilityDto,
   CreateFacilityDto,
   ProfileWithScopes,
+  CreateOperatingHourDto,
 } from "./types";
+import { Scope } from "../types";
 
 export const userScopeService = {
   getMyUserScopes: async (): Promise<UserScopeWithVenue[]> => {
@@ -22,11 +24,11 @@ export const profileService = {
     const response = await api<Profile>("/profile/me");
     return response?.data || null;
   },
-  
+
   getProfileWithScopes: async (): Promise<ProfileWithScopes | null> => {
     const response = await api<ProfileWithScopes>("/profile/me-with-scopes");
     return response?.data || null;
-  }
+  },
 };
 
 export const bookingService = {
@@ -60,6 +62,14 @@ export const userService = {
     return response || null;
   },
 
+  searchUsers: async (search: string): Promise<Profile[]> => {
+    const response = await apiPaginated<Profile>("/admin/users", {
+      search,
+      limit: 10,
+    });
+    return response?.data || [];
+  },
+
   getUserDetails: async (
     userId: string
   ): Promise<ProfileWithDetails | null> => {
@@ -68,18 +78,21 @@ export const userService = {
   },
 };
 
-
 export const facilityService = {
   getAllFacilities: async (params?: {
     search?: string;
     page?: number;
     limit?: number;
   }): Promise<PaginatedResponse<FacilityWithRelations> | null> => {
-    const response = await apiPaginated<FacilityWithRelations>("/facilities", params);
+    const response = await apiPaginated<FacilityWithRelations>(
+      "/facilities",
+      params
+    );
     return response || null;
   },
 
   getFacility: async (facilityId: string): Promise<FacilityDetails | null> => {
+    console.log(facilityId, "facility id in getfaciltiy");
     const response = await api<FacilityDetails>(`/facilities/${facilityId}`);
     return response?.data || null;
   },
@@ -87,44 +100,143 @@ export const facilityService = {
   createFacility: async (
     createData: CreateFacilityDto
   ): Promise<FacilityDetails | null> => {
-    const response = await api<FacilityDetails>(
-      "/facilities", 
-      {
-        method: 'POST',
-        body: JSON.stringify(createData),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const response = await api<FacilityDetails>("/facilities", {
+      method: "POST",
+      body: JSON.stringify(createData),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
     return response?.data || null;
   },
 
   updateFacility: async (
-    facilityId: string, 
+    facilityId: string,
     updateData: UpdateFacilityDto
   ): Promise<FacilityDetails | null> => {
-    const response = await api<FacilityDetails>(
-      `/facilities/${facilityId}`, 
-      {
-        method: 'PATCH',
-        body: JSON.stringify(updateData),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const response = await api<FacilityDetails>(`/facilities/${facilityId}`, {
+      method: "PATCH",
+      body: JSON.stringify(updateData),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
     return response?.data || null;
   },
 
   deleteFacility: async (facilityId: string): Promise<boolean> => {
     const response = await api<{ message: string }>(
-      `/facilities/${facilityId}`, 
+      `/facilities/${facilityId}`,
       {
-        method: 'DELETE',
+        method: "DELETE",
       }
     );
     return response?.success || false;
   },
+};
 
-}
+export const operatingHourService = {
+  getOperatingHours: async (
+    scopeId: string,
+    scope: Scope
+  ): Promise<OperatingHour[] | null> => {
+    const response = await api<OperatingHour[]>(
+      `/${scope}/${scopeId}/operating-hours`
+    );
+    return response?.data || [];
+  },
+  addOperatingHour: async (
+    scopeId: string,
+    scope: Scope,
+    data: CreateOperatingHourDto
+  ) => {
+    const response = await api(`/${scope}/${scopeId}/operating-hours`, {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: { "Content-Type": "application/json" },
+    });
+    return response?.data;
+  },
+  addOperatingHoursBulk: async (
+    scopeId: string,
+    scope: Scope,
+    data: CreateOperatingHourDto[]
+  ) => {
+    const response = await api(`/${scope}/${scopeId}/operating-hours/bulk`, {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: { "Content-Type": "application/json" },
+    });
+    return response?.data;
+  },
+  updateOperatingHour: async (
+    scopeId: string,
+    scope: Scope,
+    hourId: number,
+    data: Partial<Omit<CreateOperatingHourDto, "id">>
+  ) => {
+    const response = await api(
+      `/${scope}/${scopeId}/operating-hours/${hourId}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    return response?.data;
+  },
+  deleteOperatingHour: async (
+    scopeId: string,
+    scope: Scope,
+    hourId: number
+  ) => {
+    const response = await api(
+      `/${scope}/${scopeId}/operating-hours/${hourId}`,
+      {
+        method: "DELETE",
+      }
+    );
+    return response?.success || false;
+  },
+  deleteAllOperatingHours: async (scopeId: string, scope: Scope) => {
+    const response = await api(`/${scope}/${scopeId}/operating-hours`, {
+      method: "DELETE",
+    });
+    return response?.success || false;
+  },
+};
+
+export const facilityMediaService = {
+  getMedia: async (scopeId: string, scope: Scope): Promise<Media[] | null> => {
+    const response = await api<Media[]>(`/${scope}/${scopeId}/media`);
+    return response?.data || null;
+  },
+  addMedia: async (scopeId: string, scope: Scope, data: any) => {
+    const response = await api(`/${scope}/${scopeId}/media`, {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: { "Content-Type": "application/json" },
+    });
+    return response?.data;
+  },
+  addMediaBulk: async (scopeId: string, scope: Scope, data: any[]) => {
+    const response = await api(`/${scope}/${scopeId}/media/bulk`, {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: { "Content-Type": "application/json" },
+    });
+    return response?.data;
+  },
+  deleteMedia: async (scopeId: string, scope: Scope, mediaId: string) => {
+    const response = await api(`/${scope}/${scopeId}/media/${mediaId}`, {
+      method: "DELETE",
+    });
+    return response?.success || false;
+  },
+  deleteAllMedia: async (scopeId: string, scope: Scope) => {
+    const response = await api(`/${scope}/${scopeId}/media`, {
+      method: "DELETE",
+    });
+    return response?.success || false;
+  },
+};

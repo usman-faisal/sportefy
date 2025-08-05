@@ -6,12 +6,12 @@ import {
   Logger,
 } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
-import { operatingHours } from '@sportefy/db-types';
+import { facilities, operatingHours } from '@sportefy/db-types';
 import { CreateOperatingHourDto } from './dto/create-operating-hour.dto';
 import { Scope } from 'src/common/types';
 import { OperatingHourRepository } from './operating-hour.repository';
 import { ResponseBuilder } from 'src/common/utils/response-builder';
-import { getScopeField, getScopeId } from 'src/common/utils/user-scope';
+import { getScopeField } from 'src/common/utils/user-scope';
 
 @Injectable()
 export class OperatingHourService {
@@ -21,8 +21,13 @@ export class OperatingHourService {
     private readonly operatingHourRepository: OperatingHourRepository,
   ) {}
 
+  _getScopeId(scope: Scope) {
+    return scope === Scope.FACILITY
+      ? operatingHours.facilityId
+      : operatingHours.venueId;
+  }
   async getOperatingHours(scopeId: string, scope: Scope) {
-    const whereCondition = eq(getScopeId(scope), scopeId);
+    const whereCondition = eq(this._getScopeId(scope), scopeId);
 
     const operatingHoursList =
       await this.operatingHourRepository.getManyOperatingHours(
@@ -103,7 +108,7 @@ export class OperatingHourService {
     hourId: number,
     updateData: CreateOperatingHourDto,
   ) {
-    const whereCondition = eq(getScopeId(scope), scopeId);
+    const whereCondition = eq(this._getScopeId(scope), scopeId);
 
     const updatedOperatingHour =
       await this.operatingHourRepository.updateOperatingHour(
@@ -126,7 +131,7 @@ export class OperatingHourService {
   }
 
   async deleteOperatingHour(scopeId: string, scope: Scope, hourId: number) {
-    const whereCondition = eq(getScopeId(scope), scopeId);
+    const whereCondition = eq(this._getScopeId(scope), scopeId);
 
     const deletedOperatingHour =
       await this.operatingHourRepository.deleteOperatingHour(
@@ -145,7 +150,7 @@ export class OperatingHourService {
   }
 
   async deleteOperatingHours(scopeId: string, scope: Scope) {
-    const whereCondition = eq(getScopeId(scope), scopeId);
+    const whereCondition = eq(this._getScopeId(scope), scopeId);
 
     const deletedOperatingHours =
       await this.operatingHourRepository.deleteOperatingHour(whereCondition);

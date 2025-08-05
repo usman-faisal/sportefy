@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 
 interface EditFacilityPageProps {
   params: Promise<{
-    facilityId: string;
+    id: string;
   }>;
 }
 
@@ -14,7 +14,7 @@ export default async function EditFacilityPage({
   params,
 }: EditFacilityPageProps) {
   const resolvedParams = await params;
-  const facility = await facilityService.getFacility(resolvedParams.facilityId);
+  const facility = await facilityService.getFacility(resolvedParams.id);
 
   if (!facility) {
     notFound();

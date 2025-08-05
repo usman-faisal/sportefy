@@ -15,7 +15,6 @@ interface BookingListProps {
   maxItems?: number;
   emptyMessage?: string;
   onViewDetails?: (booking: BookingWithRelations) => void;
-  onCancel?: (booking: BookingWithRelations) => void;
   onViewAll?: () => void;
 }
 
@@ -25,7 +24,6 @@ export default function BookingList({
   maxItems,
   emptyMessage = "No bookings found",
   onViewDetails,
-  onCancel,
   onViewAll,
 }: BookingListProps) {
   const displayBookings = maxItems ? bookings.slice(0, maxItems) : bookings;
@@ -33,7 +31,7 @@ export default function BookingList({
   return (
     <Card>
       <BookingListHeader title={title} count={bookings.length} />
-      
+
       {bookings.length === 0 ? (
         <BookingEmptyState message={emptyMessage} />
       ) : (
@@ -45,7 +43,6 @@ export default function BookingList({
                   key={booking.id}
                   booking={booking}
                   onViewDetails={onViewDetails}
-                  onCancel={onCancel}
                 />
               ))}
             </div>
@@ -62,4 +59,4 @@ export default function BookingList({
       )}
     </Card>
   );
-} 
+}

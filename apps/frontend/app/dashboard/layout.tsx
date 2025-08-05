@@ -1,4 +1,3 @@
-export const dynamic = "force-dynamic";
 
 import { profileService } from "@/lib/api/services";
 import { PermissionChecker } from "@/lib/utils/permissions";

@@ -10,6 +10,7 @@ import {
   OperatingHour,
   Media,
 } from "@sportefy/db-types";
+import { DayOfWeek, MediaType } from "../types";
 
 export interface UserScopeWithVenue extends UserScope {
   venue: Venue;
@@ -41,7 +42,6 @@ export interface PaginationData {
   hasNext: boolean;
   hasPrev: boolean;
 }
-
 
 export interface BookingOverviewResponse {
   summary?: BookingSummary;
@@ -101,16 +101,15 @@ export interface CreateFacilityDto {
 }
 
 export interface CreateOperatingHourDto {
-  dayOfWeek: number;
+  dayOfWeek: DayOfWeek;
   openTime: string;
   closeTime: string;
 }
 
 export interface CreateMediaDto {
-  url: string;
-  type: string;
+  mediaLink: string;
+  mediaType: MediaType;
 }
-
 
 export interface UserScopeWithFacilityAndVenue extends UserScope {
   facility?: Facility;

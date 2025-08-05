@@ -10,7 +10,7 @@ export function FacilityCreatePage() {
   const router = useRouter();
 
   const handleBack = () => {
-    router.push("/dashboard/admin/facilities");
+    router.push("/dashboard/facilities");
   };
 
   return (
@@ -31,7 +31,7 @@ export function FacilityCreatePage() {
         </div>
       </div>
 
-      <FacilityCreateForm onCancel={handleBack} />
+      <FacilityCreateForm />
     </div>
   );
 } 

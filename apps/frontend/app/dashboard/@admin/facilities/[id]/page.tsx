@@ -7,13 +7,13 @@ import FacilityDetail from "@/components/common/facilities/facility-detail/facil
 
 interface FacilityDetailPageProps {
   params: Promise<{
-    facilityId: string;
+    id: string;
   }>;
 }
 
-async function getFacilityData(facilityId: string) {
+async function getFacilityData(id: string) {
   try {
-    const facility = await facilityService.getFacility(facilityId);
+    const facility = await facilityService.getFacility(id);
 
     if (!facility) {
       return null;
@@ -31,8 +31,8 @@ async function getFacilityData(facilityId: string) {
 export default async function FacilityDetailPage({
   params,
 }: FacilityDetailPageProps) {
-  const { facilityId } = await params;
-  const data = await getFacilityData(facilityId);
+  const { id } = await params;
+  const data = await getFacilityData(id);
 
   if (!data) {
     notFound();

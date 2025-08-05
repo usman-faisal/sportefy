@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Pagination } from "@/components/common/pagination";
-import { FacilityWithRelations } from "@/lib/api/types";
+import { FacilityWithRelations, PaginationData } from "@/lib/api/types";
 import { FacilitiesHeader } from "./faciilities-header";
 import { FacilitiesSearchBar } from "./facilities-search-bar";
 import { FacilitiesStats } from "./facilities-stats";
@@ -14,14 +14,7 @@ import { LoadingState } from "@/components/ui/loading";
 
 interface FacilitiesTableProps {
   initialFacilities: FacilityWithRelations[];
-  initialPagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
+  initialPagination: PaginationData;
   error?: string;
 }
 
@@ -32,10 +25,12 @@ export default function FacilitiesTable({
 }: FacilitiesTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   const [facilities, setFacilities] = useState(initialFacilities);
   const [pagination, setPagination] = useState(initialPagination);
-  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get("search") || ""
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -47,7 +42,7 @@ export default function FacilitiesTable({
     const params = new URLSearchParams();
     if (page > 1) params.set("page", page.toString());
     if (search) params.set("search", search);
-    
+
     const newURL = params.toString() ? `?${params.toString()}` : "";
     router.push(`/dashboard/admin/facilities${newURL}`);
   };
@@ -63,11 +58,11 @@ export default function FacilitiesTable({
   };
 
   const handleViewDetails = (facilityId: string) => {
-    router.push(`/dashboard/admin/facilities/${facilityId}`);
+    router.push(`/dashboard/facilities/${facilityId}`);
   };
 
   const handleAddFacility = () => {
-    router.push("/dashboard/admin/facilities/create");
+    router.push("/dashboard/facilities/create");
   };
 
   const handleEditFacility = (facilityId: string) => {
@@ -75,11 +70,13 @@ export default function FacilitiesTable({
   };
 
   const totalFacilities = pagination.total;
-  const activeVenues = facilities.reduce((acc, facility) => 
-    acc + (facility.venue ? 1 : 0), 0
+  const activeVenues = facilities.reduce(
+    (acc, facility) => acc + (facility.venue ? 1 : 0),
+    0
   );
-  const totalSports = facilities.reduce((acc, facility) => 
-    acc + (facility.venue?.sports?.length || 0), 0
+  const totalSports = facilities.reduce(
+    (acc, facility) => acc + (facility.venue?.sports?.length || 0),
+    0
   );
 
   return (
@@ -87,7 +84,7 @@ export default function FacilitiesTable({
       <FacilitiesHeader onAddFacility={handleAddFacility} />
 
       <div className="grid gap-6">
-        <FacilitiesSearchBar 
+        <FacilitiesSearchBar
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
         />
@@ -102,7 +99,7 @@ export default function FacilitiesTable({
       {error && <FacilitiesErrorState error={error} />}
 
       {facilities.length === 0 && !isLoading ? (
-        <FacilitiesEmptyState 
+        <FacilitiesEmptyState
           searchQuery={searchQuery}
           onAddFacility={handleAddFacility}
         />
@@ -110,7 +107,6 @@ export default function FacilitiesTable({
         <FacilitiesGrid
           facilities={facilities}
           onViewDetails={handleViewDetails}
-          onEdit={handleEditFacility}
         />
       )}
 

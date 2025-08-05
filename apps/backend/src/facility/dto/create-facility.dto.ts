@@ -3,13 +3,10 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsNotEmpty,
-  IsOptional,
-  IsUrl,
   IsUUID,
   MaxLength,
   ValidateNested,
 } from 'class-validator';
-import { NewFacility } from '@sportefy/db-types';
 import { CreateMediaDto } from 'src/media/dto/create-media.dto';
 import { CreateOperatingHourDto } from 'src/operating-hour/dto/create-operating-hour.dto';
 

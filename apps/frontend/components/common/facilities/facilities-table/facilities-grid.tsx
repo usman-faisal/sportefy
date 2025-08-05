@@ -5,10 +5,12 @@ import { FacilityCard } from "./facility-card";
 interface FacilitiesGridProps {
   facilities: FacilityWithRelations[];
   onViewDetails: (facilityId: string) => void;
-  onEdit?: (facilityId: string) => void;
 }
 
-export function FacilitiesGrid({ facilities, onViewDetails, onEdit }: FacilitiesGridProps) {
+export function FacilitiesGrid({
+  facilities,
+  onViewDetails,
+}: FacilitiesGridProps) {
   return (
     <div className="grid gap-4">
       {facilities.map((facility) => (
@@ -16,7 +18,6 @@ export function FacilitiesGrid({ facilities, onViewDetails, onEdit }: Facilities
           key={facility.id}
           facility={facility}
           onViewDetails={onViewDetails}
-          onEdit={onEdit}
         />
       ))}
     </div>

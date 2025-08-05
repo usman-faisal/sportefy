@@ -1,13 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
-import { FacilityDetails, UpdateFacilityDto } from "@/lib/api/types";
+import { FacilityDetails } from "@/lib/api/types";
 import { FacilityEditForm } from "./faciility-edit-form";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { facilityService } from "@/lib/api/services";
-import { toast } from "sonner";
 
 interface FacilityEditPageProps {
   facility: FacilityDetails;
@@ -17,7 +15,7 @@ export function FacilityEditPage({ facility }: FacilityEditPageProps) {
   const router = useRouter();
 
   const handleBack = () => {
-    router.push(`/dashboard/admin/facilities/${facility.id}`);
+    router.push(`/dashboard/facilities/${facility.id}`);
   };
 
 
@@ -41,7 +39,8 @@ export function FacilityEditPage({ facility }: FacilityEditPageProps) {
 
       <FacilityEditForm
         facility={facility}
-        onCancel={handleBack}
+        initialOperatingHours={facility.operatingHours}
+        initialMedia={facility.media}
       />
     </div>
   );
