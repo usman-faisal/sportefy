@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { venueService, operatingHourService, facilityMediaService } from "@/lib/api/services";
 import { CreateVenueDto, UpdateVenueDto } from "@/lib/api/types";
 import { Scope, DayOfWeek, MediaType } from "@/lib/types";
+import { Venue } from "@sportefy/db-types";
 
 type VenueFormData = {
   name: string;
@@ -157,4 +158,22 @@ export async function deleteVenue(facilityId: string, venueId: string) {
   
   revalidatePath("/dashboard/venues");
   redirect("/dashboard/venues");
+}
+
+export async function searchVenuesByName(
+  nameQuery: string
+): Promise<Venue[] | null> {
+  if (!nameQuery || nameQuery.trim().length < 1) {
+    return null;
+  }
+  try {
+    const venues = await venueService.getAllVenues({
+      search: nameQuery,
+      limit: 10,
+    });
+    return venues?.data || null;
+  } catch (error) {
+    console.error("Failed to search for venues:", error);
+    return null;
+  }
 }

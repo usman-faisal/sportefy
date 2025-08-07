@@ -1,4 +1,4 @@
-import { Media, OperatingHour, Profile, Sport, Venue } from "@sportefy/db-types";
+import { Booking, Media, OperatingHour, Profile, Sport, Venue } from "@sportefy/db-types";
 import { api, apiPaginated, PaginatedResponse } from "./api";
 import {
   BookingOverview,
@@ -10,6 +10,8 @@ import {
   CreateFacilityDto,
   ProfileWithScopes,
   CreateOperatingHourDto,
+  BookingStats,
+  BookingWithRelations,
 } from "./types";
 import { CreateVenueDto, UpdateVenueDto, VenueDetails } from "./types";
 import { Scope } from "../types";
@@ -51,6 +53,27 @@ export const bookingService = {
 
     return response || null;
   },
+    getAllBookings: async (params?: {
+    page?: number;
+    limit?: number;
+    venueId?: string;
+    status?: string;
+  }): Promise<PaginatedResponse<BookingWithRelations> | null> => {
+    const response = await apiPaginated<BookingWithRelations>("/bookings/all", params);
+    return response || null;
+  },
+
+  getBookingStats: async (): Promise<BookingStats | null> => {
+    const response = await api<BookingStats>("/bookings/stats");
+    return response?.data || null;
+  },
+  getBookingDetails: async (
+    bookingId: string
+  ): Promise<BookingWithRelations | null> => {
+    const response = await api<BookingWithRelations>(`/bookings/${bookingId}`);
+    return response?.data || null;
+  },
+
 };
 
 export const sportService = {

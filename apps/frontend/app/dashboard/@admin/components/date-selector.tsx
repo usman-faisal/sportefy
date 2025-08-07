@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -18,25 +18,26 @@ export function DateSelector() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const currentDateString =
-    searchParams.get("date") || new Date().toISOString().split("T")[0];
-  const currentDate = new Date(currentDateString);
+  const today = new Date();
+  const todayString = format(today, "yyyy-MM-dd");
+
+  const currentDateString = searchParams.get("date") || todayString;
+  const currentDate = parseISO(currentDateString);
 
   const handleDateChange = (newDate: Date | undefined) => {
     if (!newDate) return;
     
     const params = new URLSearchParams(searchParams.toString());
-    params.set("date", newDate.toISOString().split("T")[0]);
-    params.delete("page");
+    params.set("date", format(newDate, "yyyy-MM-dd"));
+    params.delete("page"); 
     router.push(`?${params.toString()}`);
   };
 
   const goToToday = () => {
-    const today = new Date();
-    handleDateChange(today);
+    handleDateChange(new Date());
   };
 
-  const isToday = currentDateString === new Date().toISOString().split("T")[0];
+  const isToday = currentDateString === todayString;
 
   return (
     <div className="flex items-center gap-2">

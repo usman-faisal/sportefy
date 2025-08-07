@@ -68,6 +68,11 @@ const globalAdminLinks: NavigationItem[] = [
     label: "All Facilities",
   },
   {
+    href: "/dashboard/venues",
+    icon: MapPin,
+    label: "All Venues",
+  },
+  {
     href: "/dashboard/reports",
     icon: BarChart2,
     label: "Global Reports",

@@ -9,6 +9,7 @@ import {
   Facility,
   OperatingHour,
   Media,
+  Slot,
 } from "@sportefy/db-types";
 import { DayOfWeek, MediaType } from "../types";
 
@@ -58,6 +59,8 @@ export interface UserWithBookings extends User {
 export interface BookingWithRelations extends Booking {
   venue?: Venue;
   match?: Match;
+  slots: Slot[];
+  bookedByProfile?: Profile;
 }
 
 export interface ProfileWithDetails extends Profile {
@@ -142,4 +145,11 @@ export interface VenueDetails extends Venue {
   sports: Sport[];
   operatingHours: OperatingHour[];
   bookings: Booking[];
+}
+
+export interface BookingStats {
+  totalRevenue: number;
+  totalBookings: number;
+  confirmedBookings: number;
+  cancelledBookings: number;
 }
