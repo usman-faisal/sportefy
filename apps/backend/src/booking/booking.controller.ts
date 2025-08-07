@@ -19,13 +19,15 @@ import {
   ApiOperation,
   ApiParam,
   ApiQuery,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { UpdateBookingDto } from './dto/update-booking.dto';
-import { CheckInService } from 'src/check-in/check-in.service';
 import { GetBookingsDto } from './dto/get-bookings.dto';
+import { SearchBookingsQuery } from './dto/search-bookings.query';
+import { BookingStatsResponseDto } from './dto/booking-stats-response.dto';
 
-@ApiTags('Bookings') // Groups endpoints in Swagger UI
+@ApiTags('Bookings')
 @Controller('bookings')
 export class BookingController {
   constructor(private readonly bookingService: BookingService) {}
@@ -39,6 +41,26 @@ export class BookingController {
     @Query() getBookingsDto: GetBookingsDto,
   ) {
     return this.bookingService.getUserBookings(user, getBookingsDto);
+  }
+
+  @Auth(UserRole.ADMIN)
+  @Get('all')
+  @ApiOperation({ summary: 'Get all bookings with search and filter options' })
+  @ApiQuery({ type: SearchBookingsQuery })
+  async getAllBookings(@Query() searchBookingsQuery: SearchBookingsQuery) {
+    return this.bookingService.getAllBookings(searchBookingsQuery);
+  }
+
+  @Auth(UserRole.ADMIN)
+  @Get('stats')
+  @ApiOperation({ summary: 'Get booking statistics including revenue and counts' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns booking statistics',
+    type: BookingStatsResponseDto,
+  })
+  async getBookingStats() {
+    return this.bookingService.getBookingStats();
   }
 
   @Auth(UserRole.ADMIN, UserRole.USER)
@@ -58,7 +80,7 @@ export class BookingController {
   @ApiBody({ type: CreateBookingDto })
   async createBooking(
     @CurrentUser() user: Profile,
-    @Body() createBookingDto: CreateBookingDto, // DTO now contains venueId
+    @Body() createBookingDto: CreateBookingDto,
   ) {
     return this.bookingService.createBooking(user, createBookingDto);
   }

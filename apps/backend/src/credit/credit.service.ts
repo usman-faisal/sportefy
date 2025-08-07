@@ -42,7 +42,7 @@ export class CreditService {
       splitType === PaymentSplitType.SPLIT_EVENLY
     ) {
       if (playerLimit === 0) return 0;
-      return basePrice / playerLimit;
+      return Math.round(basePrice / playerLimit);
     }
 
     if (splitType === PaymentSplitType.CREATOR_PAYS_ALL) {

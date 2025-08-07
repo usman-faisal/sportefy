@@ -4,7 +4,7 @@ import {
   DrizzleClient,
 } from 'src/common/providers/drizzle.provider';
 import { NewBooking, Booking, bookings } from '@sportefy/db-types';
-import { SQL, and, count, eq, gte, inArray, lt } from 'drizzle-orm';
+import { SQL, and, count, eq, gte, inArray, lt, sum } from 'drizzle-orm';
 import { DrizzleTransaction, SqlUnknown } from 'src/database/types';
 import { BaseRepository } from 'src/common/base.repository';
 import { IncludeRelation, InferResultType } from 'src/database/utils';
@@ -25,7 +25,7 @@ export type BookingsOrderByInput = NonNullable<
 
 @Injectable()
 export class BookingRepository extends BaseRepository {
-  constructor(@Inject(DRIZZLE_CLIENT) protected readonly db: DrizzleClient) {
+  constructor(@Inject(DRIZZLE_CLIENT) readonly db: DrizzleClient) {
     super(db);
   }
 
@@ -174,9 +174,9 @@ export class BookingRepository extends BaseRepository {
     tx?: DrizzleTransaction,
   ): Promise<
     {
-      slot: typeof slots.$inferSelect;
+      slot: typeof slots.$inferSelect | null; // Slot can be null
       booking: typeof bookings.$inferSelect;
-      match: typeof matches.$inferSelect;
+      match: typeof matches.$inferSelect | null; // Match can be null
     }[]
   > {
     const dbClient = tx || this.db;
@@ -188,14 +188,15 @@ export class BookingRepository extends BaseRepository {
         match: matches,
       })
       .from(bookings)
-      .innerJoin(
+      .leftJoin(
         slots,
         and(
           eq(slots.eventId, bookings.id),
           eq(slots.eventType, SlotEventType.BOOKING),
         ),
       )
-      .innerJoin(matches, eq(matches.bookingId, bookings.id))
+      // FIX: Changed to leftJoin
+      .leftJoin(matches, eq(matches.bookingId, bookings.id))
       .where(where);
 
     return result;
@@ -222,5 +223,45 @@ export class BookingRepository extends BaseRepository {
           eq(slots.eventType, SlotEventType.BOOKING),
         ),
       );
+  }
+
+  async getBookingStats(tx?: DrizzleTransaction): Promise<{
+    totalRevenue: number;
+    totalBookings: number;
+    confirmedBookings: number;
+    cancelledBookings: number;
+  }> {
+    const dbClient = tx || this.db;
+
+    // Get total revenue and total bookings
+    const [totalStats] = await dbClient
+      .select({
+        totalRevenue: sum(bookings.totalCredits),
+        totalBookings: count(),
+      })
+      .from(bookings);
+
+    // Get confirmed bookings count
+    const [confirmedStats] = await dbClient
+      .select({
+        confirmedBookings: count(),
+      })
+      .from(bookings)
+      .where(eq(bookings.status, 'confirmed'));
+
+    // Get cancelled bookings count
+    const [cancelledStats] = await dbClient
+      .select({
+        cancelledBookings: count(),
+      })
+      .from(bookings)
+      .where(eq(bookings.status, 'cancelled'));
+
+    return {
+      totalRevenue: Number(totalStats.totalRevenue) || 0,
+      totalBookings: totalStats.totalBookings || 0,
+      confirmedBookings: confirmedStats.confirmedBookings || 0,
+      cancelledBookings: cancelledStats.cancelledBookings || 0,
+    };
   }
 }

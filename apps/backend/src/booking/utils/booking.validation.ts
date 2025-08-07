@@ -1,8 +1,9 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { Booking, Match, Profile, Venue } from '@sportefy/db-types';
+import { UserRole } from 'src/common/types';
 
 export const assertUserOwnsTheBooking = (user: Profile, booking: Booking) => {
-  if (user.id !== booking.bookedBy) {
+  if (user.id !== booking.bookedBy && user.role !== UserRole.ADMIN) {
     throw new ForbiddenException('You do not own the booking');
   }
 };

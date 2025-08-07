@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { BookingRepository } from './booking.repository';
@@ -19,9 +20,10 @@ import {
   PaymentSplitType,
   SlotEventType,
   SportType,
+  PaginatedResult,
 } from 'src/common/types';
 import { ProfileRepository } from 'src/profile/profile.repository';
-import { and, eq, gt, gte } from 'drizzle-orm';
+import { and, eq, gt, gte, exists, ConsoleLogWriter } from 'drizzle-orm';
 import {
   bookings,
   matches,
@@ -44,9 +46,12 @@ import { JwtService } from '@nestjs/jwt';
 import { UnitOfWork } from 'src/common/services/unit-of-work.service';
 import { GetBookingsDto } from './dto/get-bookings.dto';
 import { VenueSportRepository } from 'src/venue-sport/venue-sport.repository';
+import { SearchBookingsQuery } from './dto/search-bookings.query';
+import { SQL } from 'drizzle-orm';
 
 @Injectable()
 export class BookingService {
+  private readonly logger = new Logger(BookingService.name);
   constructor(
     private readonly bookingRepository: BookingRepository,
     private readonly profileRepository: ProfileRepository,
@@ -70,9 +75,8 @@ export class BookingService {
     if (!booking) {
       throw new NotFoundException('Booking not found');
     }
-    if (user.id !== booking.booking.bookedBy) {
-      throw new ForbiddenException('you dont own the booking');
-    }
+
+    bookingValidator.assertUserOwnsTheBooking(user, booking as unknown as Booking)
 
     return ResponseBuilder.success(booking);
   }
@@ -172,11 +176,6 @@ export class BookingService {
         },
         tx,
       );
-
-      const finalQrCodeToken = await this.jwtService.signAsync({
-        bookingId: newBooking.id,
-      });
-
       const [_, newMatch] = await Promise.all([
         // create slot
         this.slotRepository.createSlot(
@@ -370,5 +369,115 @@ export class BookingService {
     this.bookingSchedulerService.cancelScheduledJob(booking.id);
 
     return ResponseBuilder.success(null, 'Booking cancelled successfully.');
+  }
+
+
+  async getAllBookings(searchQuery: SearchBookingsQuery): Promise<PaginatedResult<Booking>> {
+    const { limit, offset, page, ...otherSearchQuery } = searchQuery;
+    const whereConditions = this.buildWhereConditions(otherSearchQuery);
+
+    const total = await this.bookingRepository.count(whereConditions);
+    const data = await this.bookingRepository.getManyBookings(
+      whereConditions,
+      {
+        venue: true,
+        bookedByProfile: true,
+        match: {
+          with: {
+            sport: true,
+          },
+        },
+        slot: true,
+      },
+      limit,
+      offset,
+      (bookings, { desc }) => desc(bookings.createdAt),
+    );
+
+    const paginationLimit = limit || 10;
+    const paginationPage = page || 1;
+
+    const totalPages = Math.ceil(total / paginationLimit);
+    const hasNext = paginationPage < totalPages;
+    const hasPrev = paginationPage > 1;
+
+    this.logger.log(
+      `Fetched ${data.length} bookings on page ${paginationPage} with limit ${paginationLimit}`,
+    );
+    return ResponseBuilder.paginated(data, {
+      page: paginationPage,
+      limit: paginationLimit,
+      total,
+      totalPages,
+      hasNext,
+      hasPrev,
+    });
+  }
+
+  /**
+   * Builds the where conditions for searching bookings based on the search query.
+   * @param searchQuery The search criteria for bookings.
+   * @returns SQL conditions for the query.
+   */
+  private buildWhereConditions(
+    query: Partial<SearchBookingsQuery>,
+  ): SQL<unknown> | undefined {
+    const conditions: any[] = [];
+
+    if (query.venueId) {
+      conditions.push(eq(bookings.venueId, query.venueId));
+    }
+
+    if (query.status) {
+      conditions.push(eq(bookings.status, query.status));
+    }
+
+    if (query.bookedBy) {
+      conditions.push(eq(bookings.bookedBy, query.bookedBy));
+    }
+
+    if (query.facilityId) {
+      conditions.push(
+        exists(
+          this.bookingRepository.db
+            .select()
+            .from(venues)
+            .where(
+              and(
+                eq(venues.id, bookings.venueId),
+                eq(venues.facilityId, query.facilityId),
+              ),
+            ),
+        ),
+      );
+    }
+
+    if (query.sportId) {
+      conditions.push(
+        exists(
+          this.bookingRepository.db
+            .select()
+            .from(matches)
+            .where(
+              and(
+                eq(matches.bookingId, bookings.id),
+                eq(matches.sportId, query.sportId),
+              ),
+            ),
+        ),
+      );
+    }
+
+    return conditions.length > 0 ? and(...conditions) : undefined;
+  }
+
+  /**
+   * Get booking statistics including total revenue, bookings count, and status breakdown.
+   * @returns Booking statistics object
+   */
+  async getBookingStats() {
+    const stats = await this.bookingRepository.getBookingStats();
+    
+    return ResponseBuilder.success(stats, 'Booking statistics retrieved successfully');
   }
 }

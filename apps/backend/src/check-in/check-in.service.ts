@@ -99,6 +99,12 @@ export class CheckInService {
 
     const { booking, slot, match } = bookingDetails;
 
+    if (!slot || !match) {
+      throw new NotFoundException(
+        'Booking does not have associated slot or match information.',
+      );
+    }
+
     this.validateCheckInAttempt(booking, slot);
 
     const playerInMatch = await this.matchPlayerRepository.getMatchPlayer(
