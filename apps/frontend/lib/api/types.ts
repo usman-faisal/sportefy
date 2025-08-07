@@ -118,3 +118,28 @@ export interface UserScopeWithFacilityAndVenue extends UserScope {
 export interface ProfileWithScopes extends Profile {
   userScopes?: UserScopeWithFacilityAndVenue[];
 }
+
+
+export interface CreateVenueDto {
+  name: string;
+  sportIds: string[];
+  basePrice: number;
+  capacity: number;
+  operatingHours: CreateOperatingHourDto[];
+  media: CreateMediaDto[];
+}
+
+export interface UpdateVenueDto {
+  name?: string;
+  sportIds?: string[];  // Fixed: backend expects 'sportIds' not 'sports'
+  basePrice?: number;   // Fixed: backend expects 'basePrice' not 'base_price'  
+  capacity?: number;
+  // Note: operatingHours and media are handled separately via different endpoints
+}
+
+export interface VenueDetails extends Venue {
+  facility: Facility;
+  sports: Sport[];
+  operatingHours: OperatingHour[];
+  bookings: Booking[];
+}

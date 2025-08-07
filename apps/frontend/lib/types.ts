@@ -1,5 +1,6 @@
-import { Profile, Venue } from "@sportefy/db-types";
+import { Booking, Facility, Profile, Sport, Venue } from "@sportefy/db-types";
 import { OperatingHour } from "@sportefy/db-types";
+import { CreateOperatingHourDto } from "./api/types";
 export enum UserRole {
   ADMIN = "admin",
   USER = "user",

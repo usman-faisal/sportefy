@@ -70,7 +70,7 @@ export class MediaService {
    */
   async getMedia(entityType: MediaEntityType, entityId: string) {
     return ResponseBuilder.success(
-      await this.mediaRepository.getMedia(
+      await this.mediaRepository.getManyMedia(
         and(eq(media.entityId, entityId), eq(media.entityType, entityType)),
       ),
     );

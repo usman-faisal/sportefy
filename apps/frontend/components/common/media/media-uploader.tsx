@@ -24,6 +24,8 @@ const getBucketName = (mediaEntityType: MediaEntityType) => {
   switch (mediaEntityType) {
     case MediaEntityType.FACILITY:
       return "facilities";
+    case MediaEntityType.VENUE:
+      return "venues";
     default:
       throw new Error("Invalid media entity type");
   }

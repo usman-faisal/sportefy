@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock } from "lucide-react";
-import { formatTime } from "@/lib/utils";
+import { formatTime, timeStringToDate } from "@/lib/utils";
 import { OperatingHour } from "@sportefy/db-types";
 
 interface OperatingHourProps {
@@ -36,7 +36,7 @@ export function OperatingHours({ operatingHours }: OperatingHourProps) {
                 </div>
                 {hour.openTime && hour.closeTime && (
                   <div className="text-sm text-muted-foreground">
-                    {formatTime(hour.openTime)} - {formatTime(hour.closeTime)}
+                    {formatTime(timeStringToDate(hour.openTime))} - {formatTime(timeStringToDate(hour.closeTime))}
                   </div>
                 )}
               </div>

@@ -18,7 +18,7 @@ export function FacilityEditPage({ facility }: FacilityEditPageProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleBack = () => {
-    router.push(`/dashboard/admin/  facilities/${facility.id}`);
+    router.push(`/dashboard/  facilities/${facility.id}`);
   };
 
   return (

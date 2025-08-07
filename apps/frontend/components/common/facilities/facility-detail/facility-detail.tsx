@@ -23,7 +23,7 @@ export default function FacilityDetail({ facility }: FacilityDetailProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleBack = () => {
-    router.push("/dashboard/admin/facilities");
+    router.push("/dashboard/facilities");
   };
 
   const handleEdit = () => {

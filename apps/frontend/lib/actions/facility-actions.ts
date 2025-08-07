@@ -7,8 +7,9 @@ import {
   operatingHourService,
   facilityMediaService,
 } from "@/lib/api/services";
-import { Scope, DayOfWeek } from "../types";
+import { Scope, DayOfWeek, MediaType } from "../types";
 import { CreateOperatingHourDto } from "../api/types";
+import { Facility } from "@sportefy/db-types";
 
 type FacilityCreateData = {
   name: string;
@@ -64,7 +65,18 @@ export async function createFacility(data: FacilityCreateData) {
       })),
     };
 
-    const result = await facilityService.createFacility(createPayload);
+    const result = await facilityService.createFacility({
+      ...createPayload,
+      operatingHours: data.operatingHours.map((h) => ({
+        dayOfWeek: h.dayOfWeek,
+        openTime: h.openTime,
+        closeTime: h.closeTime,
+      })),
+      media: data.media.map((m) => ({
+        mediaLink: m.url,
+        mediaType: m.type as MediaType,
+      })),
+    });
 
     if (!result) {
       return { success: false, error: "API failed to create facility" };
@@ -75,8 +87,8 @@ export async function createFacility(data: FacilityCreateData) {
       error instanceof Error ? error.message : "An unknown error occurred.";
     return { success: false, error: errorMessage };
   }
-  revalidatePath("/dashboard/admin/facilities");
-  redirect(`/dashboard/admin/facilities`);
+  revalidatePath("/dashboard/facilities");
+  redirect(`/dashboard/facilities`);
 }
 
 export async function updateFacility(
@@ -99,6 +111,7 @@ export async function updateFacility(
     const initialMedia =
       (await facilityMediaService.getMedia(facilityId, Scope.FACILITY)) || [];
 
+    console.log(initialMedia, 'initialMedia');
     const hourIdsToDelete = initialHours
       .filter((ih) => !data.operatingHours.find((h) => h.id === ih.id))
       .map((h) => h.id);
@@ -155,7 +168,7 @@ export async function updateFacility(
     await Promise.all(promises);
 
     revalidatePath(`/dashboard/facilities/${facilityId}`);
-    revalidatePath(`/dashboard/admin/facilities`);
+    revalidatePath(`/dashboard/facilities`);
 
     return { success: true };
   } catch (error) {
@@ -169,7 +182,7 @@ export async function updateFacility(
 export async function deleteFacility(facilityId: string) {
   try {
     await facilityService.deleteFacility(facilityId);
-    revalidatePath("/dashboard/admin/facilities");
+    revalidatePath("/dashboard/facilities");
   } catch (error) {
     console.error("Error deleting facility:", error);
     const errorMessage =
@@ -178,5 +191,24 @@ export async function deleteFacility(facilityId: string) {
         : "An error occurred while deleting the facility.";
     return { success: false, error: errorMessage };
   }
-  redirect("/dashboard/admin/facilities");
+  redirect("/dashboard/facilities");
+}
+
+export async function searchFacilitiesByName(
+  nameQuery: string
+): Promise<Facility[] | null> {
+  if (!nameQuery || nameQuery.trim().length < 1) {
+    return null;
+  }
+
+  try {
+    const facilities = await facilityService.getAllFacilities({
+      name: nameQuery,
+      limit: 10,
+    });
+    return facilities?.data || null;
+  } catch (error) {
+    console.error("Failed to search for facilities:", error);
+    return null;
+  }
 }

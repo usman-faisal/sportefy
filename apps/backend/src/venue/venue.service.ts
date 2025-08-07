@@ -81,6 +81,7 @@ export class VenueService {
           sport: true,
         },
       },
+      bookings: true,
       media: true,
     });
 

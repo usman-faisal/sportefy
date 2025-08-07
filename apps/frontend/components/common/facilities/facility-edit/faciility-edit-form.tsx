@@ -26,9 +26,10 @@ import {
 } from "@/components/ui/select";
 import { Plus, Trash2, Save, X } from "lucide-react";
 import { updateFacility } from "@/lib/actions/facility-actions";
-import { DayOfWeek, MediaType } from "@/lib/types";
+import { DayOfWeek, MediaEntityType, MediaType } from "@/lib/types";
 import { Media, OperatingHour } from "@sportefy/db-types";
 import { FacilityDetails } from "@/lib/api/types";
+import { MediaUploader } from "@/components/common/media/media-uploader";
 
 const facilityEditSchema = z.object({
   name: z.string().min(1, "Facility name is required"),
@@ -117,7 +118,12 @@ export function FacilityEditForm({
   const onSubmit = async (data: FacilityEditFormData) => {
     setError(null);
 
-    const result = await updateFacility(facility.id, data);
+    const payload = {
+        ...data,
+        media: data.media.filter(m => m.url),
+    };
+
+    const result = await updateFacility(facility.id, payload);
     if (result.success) {
       router.push(`/dashboard/facilities/${facility.id}`);
       router.refresh();
@@ -306,7 +312,7 @@ export function FacilityEditForm({
                 onClick={() => appendMedia({ url: "", type: "image" })}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add
+                Add Media Slot
               </Button>
             </CardTitle>
           </CardHeader>
@@ -314,47 +320,27 @@ export function FacilityEditForm({
             {mediaFields.map((field, index) => (
               <div
                 key={field.id}
-                className="flex items-center gap-4 p-4 border rounded-lg"
+                className="flex items-start gap-4 p-4 border rounded-lg"
               >
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex-1">
+                  <MediaUploader
+                    initialUrl={field.url}
+                    mediaEntityType={MediaEntityType.FACILITY}
+                    onUploadComplete={(url: string, type: string) => {
+                      form.setValue(`media.${index}.url`, url, {
+                        shouldValidate: true,
+                      });
+                      form.setValue(`media.${index}.type`, type);
+                    }}
+                  />
                   <FormField
                     control={form.control}
                     name={`media.${index}.url`}
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>URL</FormLabel>
+                      <FormItem className="hidden">
                         <FormControl>
-                          <Input
-                            type="url"
-                            placeholder="Enter media URL"
-                            {...field}
-                          />
+                          <Input {...field} />
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`media.${index}.type`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Type</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select media type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="image">Image</SelectItem>
-                            <SelectItem value="video">Video</SelectItem>
-                            <SelectItem value="document">Document</SelectItem>
-                          </SelectContent>
-                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}

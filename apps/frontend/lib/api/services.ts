@@ -1,4 +1,4 @@
-import { Media, OperatingHour, Profile } from "@sportefy/db-types";
+import { Media, OperatingHour, Profile, Sport, Venue } from "@sportefy/db-types";
 import { api, apiPaginated, PaginatedResponse } from "./api";
 import {
   BookingOverview,
@@ -11,6 +11,7 @@ import {
   ProfileWithScopes,
   CreateOperatingHourDto,
 } from "./types";
+import { CreateVenueDto, UpdateVenueDto, VenueDetails } from "./types";
 import { Scope } from "../types";
 
 export const userScopeService = {
@@ -52,6 +53,12 @@ export const bookingService = {
   },
 };
 
+export const sportService = {
+  getAllSports: async (): Promise<Sport[]> => {
+    const response = await api<Sport[]>("/sports");
+    return response?.data || [];
+  },
+}
 export const userService = {
   getAllUsers: async (params?: {
     search?: string;
@@ -80,7 +87,7 @@ export const userService = {
 
 export const facilityService = {
   getAllFacilities: async (params?: {
-    search?: string;
+    name?: string;
     page?: number;
     limit?: number;
   }): Promise<PaginatedResponse<FacilityWithRelations> | null> => {
@@ -235,6 +242,60 @@ export const facilityMediaService = {
   },
   deleteAllMedia: async (scopeId: string, scope: Scope) => {
     const response = await api(`/${scope}/${scopeId}/media`, {
+      method: "DELETE",
+    });
+    return response?.success || false;
+  },
+};
+
+
+export const venueService = {
+  getAllVenues: async (params?: {
+    search?: string;
+    page?: number;
+    limit?: number;
+    facilityId?: string;
+  }): Promise<PaginatedResponse<Venue> | null> => {
+    const response = await apiPaginated<Venue>("/venues", params);
+    return response || null;
+  },
+
+  getVenue: async (venueId: string): Promise<VenueDetails | null> => {
+    const response = await api<VenueDetails>(`/venues/${venueId}`);
+    return response?.data || null;
+  },
+
+  createVenue: async (
+    facilityId: string,
+    createData: CreateVenueDto
+  ): Promise<Venue | null> => {
+    const response = await api<Venue>(`/facility/${facilityId}/venues`, {
+      method: "POST",
+      body: JSON.stringify(createData),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response?.data || null;
+  },
+
+  updateVenue: async (
+    facilityId: string,
+    venueId: string,
+    updateData: UpdateVenueDto
+  ): Promise<Venue | null> => {
+    const response = await api<Venue>(`/facility/${facilityId}/venues/${venueId}`, {
+      method: "PATCH",
+      body: JSON.stringify(updateData),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response?.data || null;
+  },
+
+  deleteVenue: async (facilityId: string, venueId: string): Promise<boolean> => {
+    const response = await api<{ message: string }>(`/facility/${facilityId}/venues/${venueId}`, {
       method: "DELETE",
     });
     return response?.success || false;

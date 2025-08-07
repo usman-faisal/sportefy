@@ -21,7 +21,7 @@ async function getFacilitiesData(
     const response = await facilityService.getAllFacilities({
       page,
       limit: 10,
-      search: search.trim() || undefined,
+      name: search.trim() || undefined,
     });
 
     if (!response) {

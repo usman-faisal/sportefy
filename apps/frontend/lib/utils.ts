@@ -20,3 +20,10 @@ export function formatTime(date: string | Date) {
     minute: "2-digit",
   });
 }
+
+export function timeStringToDate(time: string) {
+  const [hours, minutes, seconds] = time.split(":").map(Number);
+  const now = new Date();
+  now.setHours(hours, minutes, seconds || 0, 0);
+  return now;
+}

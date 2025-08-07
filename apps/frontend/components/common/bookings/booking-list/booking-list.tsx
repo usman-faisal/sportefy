@@ -1,13 +1,8 @@
 "use client";
 
 import { BookingWithRelations } from "@/lib/api/types";
-import { Card, CardContent } from "@/components/ui/card";
 import React from "react";
-
-import { BookingListHeader } from "./booking-list-header";
-import { BookingItem } from "./booking-item";
-import { BookingEmptyState } from "./booking-empty-state";
-import { BookingListFooter } from "./booking-list-footer";
+import { BookingClient } from "./booking-client";
 
 interface BookingListProps {
   bookings: BookingWithRelations[];
@@ -29,34 +24,12 @@ export default function BookingList({
   const displayBookings = maxItems ? bookings.slice(0, maxItems) : bookings;
 
   return (
-    <Card>
-      <BookingListHeader title={title} count={bookings.length} />
-
-      {bookings.length === 0 ? (
-        <BookingEmptyState message={emptyMessage} />
-      ) : (
-        <>
-          <CardContent>
-            <div className="space-y-4">
-              {displayBookings.map((booking) => (
-                <BookingItem
-                  key={booking.id}
-                  booking={booking}
-                  onViewDetails={onViewDetails}
-                />
-              ))}
-            </div>
-          </CardContent>
-
-          {maxItems && (
-            <BookingListFooter
-              maxItems={maxItems}
-              totalCount={bookings.length}
-              onViewAll={onViewAll}
-            />
-          )}
-        </>
-      )}
-    </Card>
+    <BookingClient
+      bookings={displayBookings}
+      title={title}
+      onViewDetails={onViewDetails}
+      onViewAll={onViewAll}
+      showViewAllButton={!!maxItems && bookings.length > maxItems}
+    />
   );
 }

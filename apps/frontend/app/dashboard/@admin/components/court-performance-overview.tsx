@@ -4,9 +4,10 @@ import React from "react";
 import { TrendingUp, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pagination } from "@/components/common/pagination";
+import { DataTable } from "@/components/ui/data-table";
 import { BookingOverview } from "@/lib/api/types";
-import { CourtPerformanceItem } from "./court-performance-item";
 import { EmptyState } from "./empty-state";
+import { CourtPerformanceColumn, columns } from "./court-performance-columns";
 
 interface CourtPerformanceOverviewProps {
   courts: BookingOverview[];
@@ -23,6 +24,19 @@ export function CourtPerformanceOverview({
   pagination,
   onPageChange,
 }: CourtPerformanceOverviewProps) {
+  // Transform courts data to match the column structure
+  const transformedData: CourtPerformanceColumn[] = courts.map((court, index) => ({
+    courtId: court.courtId,
+    courtName: court.courtName,
+    bookedSlots: court.bookedSlots,
+    availableSlots: court.availableSlots,
+    occupancyRate: court.occupancyRate,
+    revenue: court.revenue,
+    noShows: court.noShows,
+    index: index + 1 + (pagination.page - 1) * pagination.limit,
+    original: court,
+  }));
+
   return (
     <Card className="shadow-sm">
       <CardHeader className="border-b bg-muted/30">
@@ -42,17 +56,7 @@ export function CourtPerformanceOverview({
             icon={<AlertTriangle className="h-8 w-8 text-muted-foreground" />}
           />
         ) : (
-          <div className="space-y-6">
-            {courts.map((court, index) => (
-              <CourtPerformanceItem
-                key={court.courtId}
-                court={court}
-                index={index}
-                page={pagination.page}
-                limit={pagination.limit}
-              />
-            ))}
-          </div>
+          <DataTable columns={columns} data={transformedData} />
         )}
       </CardContent>
       {pagination && pagination.totalPages > 1 && (
