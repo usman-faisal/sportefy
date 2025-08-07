@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { DataTable } from "@/components/ui/data-table";
-import { Pagination } from "@/components/common/pagination";
 import { Search, Users, Eye } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { PaginationData } from "@/lib/api/types";
@@ -49,7 +48,6 @@ export const UsersClient: React.FC<UsersClientProps> = ({
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  // Transform users data to match the column structure
   const transformedData: UserColumn[] = initialUsers.map((user) => ({
     id: user.id,
     fullName: user.fullName || "No name provided",
@@ -62,7 +60,6 @@ export const UsersClient: React.FC<UsersClientProps> = ({
     original: user,
   }));
 
-  // Create columns with callbacks
   const columnsWithCallbacks = columns.map((column) => {
     if (column.id === "actions") {
       return {
@@ -152,21 +149,7 @@ export const UsersClient: React.FC<UsersClientProps> = ({
             />
           </div>
           <Separator />
-          <DataTable columns={columnsWithCallbacks} data={transformedData} />
-          
-          {initialPagination.totalPages > 1 && (
-            <div className="mt-6">
-              <Pagination
-                currentPage={initialPagination.page}
-                totalPages={initialPagination.totalPages}
-                onPageChange={handlePageChange}
-              />
-              <p className="text-center text-sm text-muted-foreground mt-4">
-                Showing page {initialPagination.page} of{" "}
-                {initialPagination.totalPages}
-              </p>
-            </div>
-          )}
+          <DataTable columns={columnsWithCallbacks} data={transformedData} pagination={initialPagination}/>
         </>
       )}
     </div>

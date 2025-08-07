@@ -52,7 +52,7 @@ interface NavigationItem {
 const globalAdminLinks: NavigationItem[] = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
   {
-    href: "/dashboard/payments",
+    href: "/dashboard/payments/pending",
     icon: Shield,
     label: "Payment Verification",
   },

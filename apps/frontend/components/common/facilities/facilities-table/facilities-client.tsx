@@ -177,7 +177,7 @@ export const FacilitiesClient: React.FC<FacilitiesClientProps> = ({
             />
           </div>
           <Separator />
-          <DataTable columns={columnsWithCallbacks} data={transformedData} />
+          <DataTable columns={columnsWithCallbacks} data={transformedData} pagination={initialPagination} />
           
           {pagination.totalPages > 1 && (
             <div className="flex justify-center">

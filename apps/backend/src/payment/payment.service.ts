@@ -14,12 +14,14 @@ import { VerifyPaymentDto } from './dto/verify-payment.dto';
 import { PaymentRepository } from './payment.repository';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UnitOfWork } from 'src/common/services/unit-of-work.service';
+import { TransactionRepository } from 'src/transaction/transaction.repository';
 
 @Injectable()
 export class PaymentService {
   constructor(
     private readonly paymentRepository: PaymentRepository,
     private readonly profileRepository: ProfileRepository,
+    private readonly transactionRepository: TransactionRepository,
     private readonly eventEmitter: EventEmitter2,
     private readonly unitOfWork: UnitOfWork,
   ) {}
@@ -106,7 +108,7 @@ export class PaymentService {
         );
 
         // 2. Log this in the transaction ledger
-        await this.paymentRepository.createTransaction(
+        await this.transactionRepository.createTransaction(
           {
             userId: payment.userId,
             type: 'top_up',
@@ -131,7 +133,15 @@ export class PaymentService {
   }
 
   async getMyTransactionHistory(user: Profile) {
-    const history = await this.paymentRepository.getUserTransactions(user.id);
+    const history = await this.transactionRepository.getUserTransactions(user.id);
     return ResponseBuilder.success(history);
+  }
+
+
+  async getUserTransactionHistory(userId: string) {
+    const transactions = await this.transactionRepository.getUserTransactions(
+      userId,
+    );
+    return ResponseBuilder.success(transactions);
   }
 }

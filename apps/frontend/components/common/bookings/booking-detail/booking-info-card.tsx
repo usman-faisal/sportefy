@@ -29,13 +29,13 @@ export const BookingInfoCard: React.FC<BookingInfoCardProps> = ({ booking }) => 
         <div className="space-y-3 text-sm">
             <div className="flex items-center">
                 <User className="mr-2 h-4 w-4 text-muted-foreground" />
-                <span>Booked by: <strong>{booking.bookedByProfile?.fullName || 'N/A'}</strong></span>
+                <span>Booked by: <Link href={`/dashboard/users/${booking.bookedBy}`} className="font-semibold text-primary hover:underline ml-1">{booking.bookedBy}</Link></span>
             </div>
             <div className="flex items-center">
                 <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
                 <span>Venue: 
-                    <Link href={`/dashboard/admin/venues/${booking.venue?.id}`} className="font-semibold text-primary hover:underline ml-1">
-                        {booking.venue?.name || 'N/A'}
+                    <Link href={`/dashboard/venues/${booking.venueId}`} className="font-semibold text-primary hover:underline ml-1">
+                        {booking.venueId || 'N/A'}
                     </Link>
                 </span>
             </div>

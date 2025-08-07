@@ -1,13 +1,22 @@
-// src/payment/payment.repository.ts
 import { Inject, Injectable } from '@nestjs/common';
-import { SQL, eq } from 'drizzle-orm';
-import { BaseRepository } from 'src/common/base.repository';
 import {
   DRIZZLE_CLIENT,
   DrizzleClient,
 } from 'src/common/providers/drizzle.provider';
-import { payments, transactions } from '@sportefy/db-types';
+import { payments, Payment, NewPayment } from '@sportefy/db-types';
+import { eq } from 'drizzle-orm';
 import { DrizzleTransaction } from 'src/database/types';
+import { BaseRepository } from 'src/common/base.repository';
+
+export type PaymentsWithInput = NonNullable<
+  Parameters<DrizzleClient['query']['payments']['findFirst']>[0]
+>['with'];
+export type PaymentsWhereInput = NonNullable<
+  Parameters<DrizzleClient['query']['payments']['findFirst']>[0]
+>['where'];
+export type PaymentsOrderByInput = NonNullable<
+  Parameters<DrizzleClient['query']['payments']['findMany']>[0]
+>['orderBy'];
 
 @Injectable()
 export class PaymentRepository extends BaseRepository {
@@ -16,32 +25,62 @@ export class PaymentRepository extends BaseRepository {
   }
 
   async createPayment(
-    data: typeof payments.$inferInsert,
+    data: NewPayment,
     tx?: DrizzleTransaction,
-  ) {
+  ): Promise<Payment> {
     const dbClient = tx || this.db;
     const [result] = await dbClient.insert(payments).values(data).returning();
     return result;
   }
 
-  async getPaymentById(id: string) {
-    const [result] = await this.db
-      .select()
-      .from(payments)
-      .where(eq(payments.id, id));
-    return result;
+  async getPayment(
+    where: PaymentsWhereInput,
+    withRelations?: PaymentsWithInput,
+    tx?: DrizzleTransaction,
+  ) {
+    const dbClient = tx || this.db;
+    return dbClient.query.payments.findFirst({
+      where,
+      with: withRelations,
+    });
   }
 
-  async getPendingPayments() {
-    return this.db
-      .select()
-      .from(payments)
-      .where(eq(payments.status, 'pending'));
+  async getPaymentById(id: string, tx?: DrizzleTransaction) {
+    return this.getPayment(eq(payments.id, id), undefined, tx);
+  }
+  
+  async getManyPayments(
+    where: PaymentsWhereInput,
+    withRelations?: PaymentsWithInput,
+    limit?: number,
+    offset?: number,
+    orderBy?: PaymentsOrderByInput,
+    tx?: DrizzleTransaction,
+  ) {
+    const dbClient = tx || this.db;
+    return dbClient.query.payments.findMany({
+      where,
+      with: withRelations,
+      limit,
+      offset,
+      orderBy,
+    });
+  }
+
+  async getPendingPayments(tx?: DrizzleTransaction) {
+    return this.getManyPayments(
+      eq(payments.status, 'pending'),
+      { user: true }, // This is how we join the user/profile data
+      undefined,
+      undefined,
+      (payments, { desc }) => [desc(payments.createdAt)],
+      tx,
+    );
   }
 
   async updatePayment(
     id: string,
-    data: Partial<typeof payments.$inferSelect>,
+    data: Partial<NewPayment>,
     tx?: DrizzleTransaction,
   ) {
     const dbClient = tx || this.db;
@@ -51,26 +90,5 @@ export class PaymentRepository extends BaseRepository {
       .where(eq(payments.id, id))
       .returning();
     return result;
-  }
-
-  async createTransaction(
-    data: typeof transactions.$inferInsert,
-    tx?: DrizzleTransaction,
-  ) {
-    const dbClient = tx || this.db;
-    const [result] = await dbClient
-      .insert(transactions)
-      .values(data)
-      .returning();
-    return result;
-  }
-
-  async getUserTransactions(userId: string, limit = 10) {
-    return this.db
-      .select()
-      .from(transactions)
-      .where(eq(transactions.userId, userId))
-      .orderBy(transactions.createdAt)
-      .limit(limit);
   }
 }

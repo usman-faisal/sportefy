@@ -7,16 +7,17 @@ interface BookingDetailPageProps {
 }
 
 export default async function BookingDetailPage({ params }: BookingDetailPageProps) {
-  const booking = await bookingService.getBookingDetails(params.bookingId);
-
-  if (!booking) {
+  const resolvedParams = await params
+  const result = await bookingService.getBookingDetails(resolvedParams.bookingId);
+  console.log(result)
+  if (!result) {
     notFound();
   }
 
   return (
     <div className="flex-col">
       <div className="flex-1 space-y-4 p-8 pt-6">
-        <BookingDetailClient booking={booking} />
+        <BookingDetailClient booking={result.booking as any} slot={result.slot} />
       </div>
     </div>
   );

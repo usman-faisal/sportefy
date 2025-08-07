@@ -10,6 +10,7 @@ import {
   OperatingHour,
   Media,
   Slot,
+  Payment,
 } from "@sportefy/db-types";
 import { DayOfWeek, MediaType } from "../types";
 
@@ -65,6 +66,12 @@ export interface BookingWithRelations extends Booking {
 
 export interface ProfileWithDetails extends Profile {
   bookings?: BookingWithRelations[];
+}
+
+export interface BookingDetails {
+  booking: Booking;
+  slot: Slot;
+  match: Match | null;
 }
 
 export interface VenueWithRelations extends Venue {
@@ -134,10 +141,9 @@ export interface CreateVenueDto {
 
 export interface UpdateVenueDto {
   name?: string;
-  sportIds?: string[];  // Fixed: backend expects 'sportIds' not 'sports'
-  basePrice?: number;   // Fixed: backend expects 'basePrice' not 'base_price'  
+  sportIds?: string[];
+  basePrice?: number;
   capacity?: number;
-  // Note: operatingHours and media are handled separately via different endpoints
 }
 
 export interface VenueDetails extends Venue {
@@ -152,4 +158,12 @@ export interface BookingStats {
   totalBookings: number;
   confirmedBookings: number;
   cancelledBookings: number;
+}
+export interface VerifyPaymentDto {
+  status: 'verified' | 'rejected';
+  rejectionReason?: string;
+}
+
+export interface PaymentWithUser extends Payment{
+  user: Profile;
 }

@@ -73,4 +73,16 @@ export class PaymentController {
   getMyTransactionHistory(@CurrentUser() user: Profile) {
     return this.paymentService.getMyTransactionHistory(user);
   }
+
+  @Auth(UserRole.ADMIN)
+  @Get('user/:userId/history')
+  @ApiOperation({ summary: 'ADMIN: Get a specific user\'s transaction history' })
+  @ApiParam({ name: 'userId', description: 'The ID of the user' })
+  getUserTransactionHistory(
+    @CurrentUser() admin: Profile,
+    @Param('userId', ParseUUIDPipe) userId: string,
+  ) {
+    return this.paymentService.getUserTransactionHistory(userId);
+  }
+  
 }

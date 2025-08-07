@@ -1,4 +1,4 @@
-import { Booking, Media, OperatingHour, Profile, Sport, Venue } from "@sportefy/db-types";
+import { Booking, Media, OperatingHour, Payment, Profile, Sport, Transaction, Venue } from "@sportefy/db-types";
 import { api, apiPaginated, PaginatedResponse } from "./api";
 import {
   BookingOverview,
@@ -12,6 +12,9 @@ import {
   CreateOperatingHourDto,
   BookingStats,
   BookingWithRelations,
+  BookingDetails,
+  VerifyPaymentDto,
+  PaymentWithUser,
 } from "./types";
 import { CreateVenueDto, UpdateVenueDto, VenueDetails } from "./types";
 import { Scope } from "../types";
@@ -69,8 +72,8 @@ export const bookingService = {
   },
   getBookingDetails: async (
     bookingId: string
-  ): Promise<BookingWithRelations | null> => {
-    const response = await api<BookingWithRelations>(`/bookings/${bookingId}`);
+  ): Promise<BookingDetails | null> => {
+    const response = await api<BookingDetails>(`/bookings/${bookingId}`);
     return response?.data || null;
   },
 
@@ -323,4 +326,31 @@ export const venueService = {
     });
     return response?.success || false;
   },
+};
+
+
+export const paymentService = {
+  getPendingPayments: async (): Promise<PaymentWithUser[] | null> => {
+    const response = await api<PaymentWithUser[]>("/payments/pending");
+    return response?.data || null;
+  },
+
+  verifyPayment: async (
+    paymentId: string,
+    data: VerifyPaymentDto
+  ): Promise<boolean> => {
+    const response = await api(`/payments/${paymentId}/verify`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response?.success || false;
+  },
+  
+  getUserTransactions: async (userId: string): Promise<Transaction[] | null> => {
+      const response = await api<Transaction[]>(`/payments/user/${userId}/history`);
+      return response?.data || [];
+  }
 };
