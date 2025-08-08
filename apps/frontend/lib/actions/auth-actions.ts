@@ -23,17 +23,6 @@ export async function signIn(formData: FormData) {
     redirect(`/auth/login?message=${encodeURIComponent(error.message)}`);
   }
 
-  if (data.session?.access_token) {
-    const cookieStore = await cookies();
-    cookieStore.set("access-token", data.session.access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-      path: "/",
-    });
-  }
-
   redirect("/");
 }
 
@@ -73,10 +62,6 @@ export async function signOut() {
   if (error) {
     console.error("Sign out error:", error.message);
   }
-
-  // Clear the HTTP-only cookie
-  const cookieStore = await cookies();
-  cookieStore.delete("access-token");
 
   redirect("/auth/login");
 }

@@ -13,15 +13,6 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.session?.access_token) {
-      const cookieStore = await cookies();
-      cookieStore.set("access-token", data.session.access_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 7,
-        path: "/",
-      });
-
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
