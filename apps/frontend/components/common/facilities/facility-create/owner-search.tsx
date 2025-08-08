@@ -34,7 +34,6 @@ export function OwnerSearch({
       setIsLoading(false);
       return;
     }
-    console.log(response, "response");
     setResults(response?.data.flat());
     setIsLoading(false);
   }, []);

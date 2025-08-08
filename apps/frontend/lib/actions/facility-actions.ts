@@ -111,7 +111,6 @@ export async function updateFacility(
     const initialMedia =
       (await facilityMediaService.getMedia(facilityId, Scope.FACILITY)) || [];
 
-    console.log(initialMedia, 'initialMedia');
     const hourIdsToDelete = initialHours
       .filter((ih) => !data.operatingHours.find((h) => h.id === ih.id))
       .map((h) => h.id);

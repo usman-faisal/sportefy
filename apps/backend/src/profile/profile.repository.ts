@@ -82,7 +82,7 @@ export class ProfileRepository extends BaseRepository {
         )
       : undefined;
 
-    const where = and(searchCondition);
+    const where = searchCondition ? and(searchCondition) : undefined;
 
     const [users, totalResult] = await Promise.all([
       this.db.query.profiles.findMany({

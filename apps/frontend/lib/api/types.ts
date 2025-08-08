@@ -14,8 +14,10 @@ import {
 } from "@sportefy/db-types";
 import { DayOfWeek, MediaType } from "../types";
 
-export interface UserScopeWithVenue extends UserScope {
-  venue: Venue;
+export interface UserScopeWithRelations extends UserScope {
+  profile: Profile;
+  venue?: Venue;
+  facility?: Facility;
 }
 
 export interface BookingOverview {

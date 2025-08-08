@@ -58,6 +58,11 @@ const globalAdminLinks: NavigationItem[] = [
   },
   { href: "/dashboard/users", icon: Users, label: "User Management" },
   {
+    href: "/dashboard/user-scopes",
+    icon: Users,
+    label: "User Scopes",
+  },
+  {
     href: "/dashboard/bookings",
     icon: ClipboardList,
     label: "All Bookings",

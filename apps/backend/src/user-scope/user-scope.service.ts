@@ -113,4 +113,22 @@ export class UserScopeService {
 
     return ResponseBuilder.success(scopes, 'fetched scopes successfully');
   }
+
+  async getFacilityUserScopes(facilityId: string) {
+    const scopes = await this.userScopeRepository.getManyUserScopes(
+      eq(userScopes.facilityId, facilityId),
+      { profile: true, facility: true },
+    );
+
+    return ResponseBuilder.success(scopes, 'fetched facility user scopes successfully');
+  }
+
+  async getVenueUserScopes(venueId: string) {
+    const scopes = await this.userScopeRepository.getManyUserScopes(
+      eq(userScopes.venueId, venueId),
+      { profile: true, venue: true },
+    );
+
+    return ResponseBuilder.success(scopes, 'fetched venue user scopes successfully');
+  }
 }

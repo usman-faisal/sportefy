@@ -13,7 +13,6 @@ export default async function BookingDetailPage({
   const result = await bookingService.getBookingDetails(
     resolvedParams.bookingId
   );
-  console.log(result);
   if (!result) {
     notFound();
   }

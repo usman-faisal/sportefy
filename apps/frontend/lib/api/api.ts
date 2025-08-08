@@ -101,8 +101,45 @@ export async function apiPaginated<T = unknown>(
   const pathWithParams = searchParams.toString()
     ? `${path}?${searchParams.toString()}`
     : path;
-  ``;
 
-  const response = await api<PaginatedResponse<T>>(pathWithParams, options);
-  return (response as unknown as PaginatedResponse<T>) || null;
+  const defaultHeaders = {
+    "Content-Type": "application/json",
+    credentials: "include",
+  };
+
+  let cookieHeader = {};
+  try {
+    const cookieStore = await cookies();
+    cookieHeader = { Cookie: cookieStore.toString() };
+  } catch (error) {
+    options.credentials = "include";
+  }
+
+  const mergedOptions: RequestInit = {
+    ...options,
+    headers: {
+      ...defaultHeaders,
+      ...cookieHeader,
+      ...options.headers,
+    },
+  };
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${pathWithParams}`, mergedOptions);
+
+    if (!response.ok) {
+      console.error("API Error:", response.status, response.statusText);
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    if (response.status === 204) {
+      return null;
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("Fetch Error:", error);
+    throw error;
+  }
 }

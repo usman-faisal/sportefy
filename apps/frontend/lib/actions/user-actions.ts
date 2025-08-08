@@ -16,7 +16,6 @@ export async function searchUsersByEmail(
       search: emailQuery,
       limit: 10,
     });
-    console.log(users)
     return users;
   } catch (error) {
     console.error("Failed to search for users:", error);

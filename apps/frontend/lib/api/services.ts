@@ -11,7 +11,7 @@ import {
 import { api, apiPaginated, PaginatedResponse } from "./api";
 import {
   BookingOverview,
-  UserScopeWithVenue,
+  UserScopeWithRelations,
   ProfileWithDetails,
   FacilityWithRelations,
   FacilityDetails,
@@ -27,11 +27,11 @@ import {
   DashboardReport,
 } from "./types";
 import { CreateVenueDto, UpdateVenueDto, VenueDetails } from "./types";
-import { Scope } from "../types";
+import { Scope, ScopeRole } from "../types";
 
 export const userScopeService = {
-  getMyUserScopes: async (): Promise<UserScopeWithVenue[]> => {
-    const response = await api<UserScopeWithVenue[]>("/user-scope/my-scopes");
+  getMyUserScopes: async (): Promise<UserScopeWithRelations[]> => {
+    const response = await api<UserScopeWithRelations[]>("/user-scope/my-scopes");
     return response?.data || [];
   },
 };
@@ -137,7 +137,6 @@ export const facilityService = {
   },
 
   getFacility: async (facilityId: string): Promise<FacilityDetails | null> => {
-    console.log(facilityId, "facility id in getfaciltiy");
     const response = await api<FacilityDetails>(`/facilities/${facilityId}`);
     return response?.data || null;
   },
@@ -384,3 +383,5 @@ export const reportService = {
     return response?.data || null;
   },
 };
+
+

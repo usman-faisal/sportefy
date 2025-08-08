@@ -170,6 +170,32 @@ export class UserScopeController {
     return this.userScopeService.removeUserScope(userId, venueId, Scope.VENUE);
   }
 
+  @Auth(UserRole.ADMIN, UserRole.USER)
+  @Get('facility/:facilityId/user-scopes')
+  @ApiOperation({ summary: 'Get user scopes for a facility' })
+  @ApiParam({
+    name: 'facilityId',
+    type: String,
+    description: 'The ID of the facility',
+  })
+  @ApiScope([ScopeRole.MODERATOR, ScopeRole.OWNER], [Scope.FACILITY, 'facilityId'])
+  async getFacilityUserScopes(@Param('facilityId', ParseUUIDPipe) facilityId: string) {
+    return this.userScopeService.getFacilityUserScopes(facilityId);
+  }
+
+  @Auth(UserRole.ADMIN, UserRole.USER)
+  @Get('venue/:venueId/user-scopes')
+  @ApiOperation({ summary: 'Get user scopes for a venue' })
+  @ApiParam({
+    name: 'venueId',
+    type: String,
+    description: 'The ID of the venue',
+  })
+  @ApiScope([ScopeRole.MODERATOR, ScopeRole.OWNER], [Scope.VENUE, 'venueId'])
+  async getVenueUserScopes(@Param('venueId', ParseUUIDPipe) venueId: string) {
+    return this.userScopeService.getVenueUserScopes(venueId);
+  }
+
   @Auth(UserRole.USER)
   @Get('user-scope/my-scopes')
   @ApiOperation({ summary: 'Get your user scopes' })
