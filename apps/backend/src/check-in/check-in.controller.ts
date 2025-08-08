@@ -1,10 +1,9 @@
-// src/check-in/check-in.controller.ts
-import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, Get } from '@nestjs/common';
 import { CheckInService } from './check-in.service';
 import { CheckInDto } from './dto/check-in.dto';
 import { WalkInCheckInDto } from './dto/walk-in-check-in.dto'; // Import new DTO
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
-import { Profile } from '@sportefy/db-types';
+import { authSchema, Profile } from '@sportefy/db-types';
 import { Auth } from 'src/common/decorators/auth.decorator';
 import { UserRole } from 'src/common/types';
 import { ApiBody, ApiOperation } from '@nestjs/swagger';
@@ -38,5 +37,12 @@ export class CheckInController {
     @Body() walkInCheckOutDto: WalkInCheckOutDto,
   ) {
     return this.checkInService.walkInCheckOut(user, walkInCheckOutDto);
+  }
+
+  @Auth(UserRole.USER)
+  @Get()
+  @ApiOperation({ summary: 'Get user check-ins' })
+  getUserCheckIns(@CurrentUser() user: Profile) {
+    return this.checkInService.getUserCheckIns(user.id);
   }
 }

@@ -18,14 +18,13 @@ export class ReportService {
       this.reportRepository.getPopularTimeSlots(),
     ]);
 
-    // Format the results for a clean API response
     const formattedTrends = bookingTrends.map((trend) => ({
       date: format(new Date(trend.date), 'yyyy-MM-dd'),
       count: trend.count,
     }));
 
     const formattedPopularSlots = popularTimeSlots.map((slot) => ({
-      time: format(new Date(slot.startTime), 'HH:mm'), // Format to show only the time
+      time: format(new Date(slot.startTime), 'HH:mm'),
       bookings: slot.bookingCount,
     }));
 

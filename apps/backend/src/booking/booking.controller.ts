@@ -53,7 +53,9 @@ export class BookingController {
 
   @Auth(UserRole.ADMIN)
   @Get('stats')
-  @ApiOperation({ summary: 'Get booking statistics including revenue and counts' })
+  @ApiOperation({
+    summary: 'Get booking statistics including revenue and counts',
+  })
   @ApiResponse({
     status: 200,
     description: 'Returns booking statistics',

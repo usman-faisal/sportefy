@@ -271,4 +271,17 @@ export class CheckInService {
 
     return ResponseBuilder.success(null, 'Check-out successful. Thank you!');
   }
+
+  async getUserCheckIns(userId: string) {
+    const userCheckIns = await this.checkInRepository.getManyCheckIns(
+      eq(checkIns.userId, userId),
+      {
+        user: true,
+        venue: true,
+        booking: true,
+      },
+    );
+
+    return ResponseBuilder.success(userCheckIns);
+  }
 }
