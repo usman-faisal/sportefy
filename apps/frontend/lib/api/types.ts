@@ -166,3 +166,21 @@ export interface VerifyPaymentDto {
 export interface PaymentWithUser extends Payment {
   user: Profile;
 }
+
+export interface BookingTrendPoint {
+  date: string;
+  count: number;
+}
+
+export interface PopularTimeSlot {
+  time: string;
+  bookings: number;
+}
+
+export interface DashboardReport {
+  summary: {
+    dailyRevenue: number;
+  };
+  bookingTrends: BookingTrendPoint[];
+  popularTimeSlots: PopularTimeSlot[];
+}

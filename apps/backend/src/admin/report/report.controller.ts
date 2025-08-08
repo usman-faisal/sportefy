@@ -6,7 +6,7 @@ import { ReportService } from './report.service';
 
 @ApiTags('Admin: Reports')
 @Auth(UserRole.ADMIN)
-@Controller('admin/reports')
+@Controller('reports')
 export class ReportController {
   constructor(private readonly reportsService: ReportService) {}
 

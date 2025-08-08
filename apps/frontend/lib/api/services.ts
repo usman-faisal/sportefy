@@ -1,4 +1,13 @@
-import { Booking, Media, OperatingHour, Payment, Profile, Sport, Transaction, Venue } from "@sportefy/db-types";
+import {
+  Booking,
+  Media,
+  OperatingHour,
+  Payment,
+  Profile,
+  Sport,
+  Transaction,
+  Venue,
+} from "@sportefy/db-types";
 import { api, apiPaginated, PaginatedResponse } from "./api";
 import {
   BookingOverview,
@@ -15,6 +24,7 @@ import {
   BookingDetails,
   VerifyPaymentDto,
   PaymentWithUser,
+  DashboardReport,
 } from "./types";
 import { CreateVenueDto, UpdateVenueDto, VenueDetails } from "./types";
 import { Scope } from "../types";
@@ -56,13 +66,16 @@ export const bookingService = {
 
     return response || null;
   },
-    getAllBookings: async (params?: {
+  getAllBookings: async (params?: {
     page?: number;
     limit?: number;
     venueId?: string;
     status?: string;
   }): Promise<PaginatedResponse<BookingWithRelations> | null> => {
-    const response = await apiPaginated<BookingWithRelations>("/bookings/all", params);
+    const response = await apiPaginated<BookingWithRelations>(
+      "/bookings/all",
+      params
+    );
     return response || null;
   },
 
@@ -76,7 +89,6 @@ export const bookingService = {
     const response = await api<BookingDetails>(`/bookings/${bookingId}`);
     return response?.data || null;
   },
-
 };
 
 export const sportService = {
@@ -84,7 +96,7 @@ export const sportService = {
     const response = await api<Sport[]>("/sports");
     return response?.data || [];
   },
-}
+};
 export const userService = {
   getAllUsers: async (params?: {
     search?: string;
@@ -274,7 +286,6 @@ export const facilityMediaService = {
   },
 };
 
-
 export const venueService = {
   getAllVenues: async (params?: {
     search?: string;
@@ -310,24 +321,32 @@ export const venueService = {
     venueId: string,
     updateData: UpdateVenueDto
   ): Promise<Venue | null> => {
-    const response = await api<Venue>(`/facility/${facilityId}/venues/${venueId}`, {
-      method: "PATCH",
-      body: JSON.stringify(updateData),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await api<Venue>(
+      `/facility/${facilityId}/venues/${venueId}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(updateData),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
     return response?.data || null;
   },
 
-  deleteVenue: async (facilityId: string, venueId: string): Promise<boolean> => {
-    const response = await api<{ message: string }>(`/facility/${facilityId}/venues/${venueId}`, {
-      method: "DELETE",
-    });
+  deleteVenue: async (
+    facilityId: string,
+    venueId: string
+  ): Promise<boolean> => {
+    const response = await api<{ message: string }>(
+      `/facility/${facilityId}/venues/${venueId}`,
+      {
+        method: "DELETE",
+      }
+    );
     return response?.success || false;
   },
 };
-
 
 export const paymentService = {
   getPendingPayments: async (): Promise<PaymentWithUser[] | null> => {
@@ -348,9 +367,20 @@ export const paymentService = {
     });
     return response?.success || false;
   },
-  
-  getUserTransactions: async (userId: string): Promise<Transaction[] | null> => {
-      const response = await api<Transaction[]>(`/payments/user/${userId}/history`);
-      return response?.data || [];
-  }
+
+  getUserTransactions: async (
+    userId: string
+  ): Promise<Transaction[] | null> => {
+    const response = await api<Transaction[]>(
+      `/payments/user/${userId}/history`
+    );
+    return response?.data || [];
+  },
+};
+
+export const reportService = {
+  getDashboardReports: async (): Promise<DashboardReport | null> => {
+    const response = await api<DashboardReport>("/reports/dashboard");
+    return response?.data || null;
+  },
 };
