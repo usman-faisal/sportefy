@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { headers } from "next/headers";
 
 export async function signIn(formData: FormData) {
   const email = formData.get("email") as string;
@@ -36,14 +37,15 @@ export async function signUp(formData: FormData) {
 
   const supabase = await createClient();
 
+  const hdrs = await headers();
+  const origin = hdrs.get("origin") || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
   const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       // This ensures the user is redirected to your site after email confirmation
-      emailRedirectTo: `${
-        process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-      }/auth/callback`,
+      emailRedirectTo: `${origin}/auth/callback`,
     },
   });
 
@@ -69,12 +71,13 @@ export async function signOut() {
 export async function signInWithGoogle() {
   const supabase = await createClient();
 
+  const hdrs = await headers();
+  const origin = hdrs.get("origin") || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${
-        process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-      }/auth/callback`,
+      redirectTo: `${origin}/auth/callback`,
       queryParams: {
         access_type: "offline",
         prompt: "consent",

@@ -11,6 +11,14 @@ export default async function LoginPage({
   // Check if user is already logged in
   const resolvedSearchParams = await searchParams;
 
+  // If OAuth provider redirected here with a code, forward it to our callback handler
+  const code = (resolvedSearchParams as any)?.code as string | undefined;
+  const next = (resolvedSearchParams as any)?.next as string | undefined;
+  if (code) {
+    const nextSuffix = next ? `&next=${encodeURIComponent(next)}` : "";
+    redirect(`/auth/callback?code=${encodeURIComponent(code)}${nextSuffix}`);
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
