@@ -30,7 +30,7 @@ export function FacilityDeleteDialog({
 }: FacilityDeleteDialogProps) {
   const [state, formAction] = useActionState(
     deleteFacility.bind(null, facilityId),
-    { error: null as string | null }
+    { success: false, error: "" }
   );
 
   return (

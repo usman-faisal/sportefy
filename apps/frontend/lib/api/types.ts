@@ -129,7 +129,6 @@ export interface ProfileWithScopes extends Profile {
   userScopes?: UserScopeWithFacilityAndVenue[];
 }
 
-
 export interface CreateVenueDto {
   name: string;
   sportIds: string[];
@@ -150,7 +149,7 @@ export interface VenueDetails extends Venue {
   facility: Facility;
   sports: Sport[];
   operatingHours: OperatingHour[];
-  bookings: Booking[];
+  bookings: BookingWithRelations[];
 }
 
 export interface BookingStats {
@@ -160,10 +159,10 @@ export interface BookingStats {
   cancelledBookings: number;
 }
 export interface VerifyPaymentDto {
-  status: 'verified' | 'rejected';
+  status: "verified" | "rejected";
   rejectionReason?: string;
 }
 
-export interface PaymentWithUser extends Payment{
+export interface PaymentWithUser extends Payment {
   user: Profile;
 }

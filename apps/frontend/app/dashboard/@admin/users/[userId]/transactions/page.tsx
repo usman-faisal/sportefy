@@ -3,13 +3,16 @@ import { UserTransactionClient } from "./components/client";
 import { notFound } from "next/navigation";
 
 interface UserTransactionsPageProps {
-  params: { userId: string };
+  params: Promise<{ userId: string }>;
 }
 
-export default async function UserTransactionsPage({ params }: UserTransactionsPageProps) {
+export default async function UserTransactionsPage({
+  params,
+}: UserTransactionsPageProps) {
+  const resolvedParams = await params;
   const [user, transactions] = await Promise.all([
-    userService.getUserDetails(params.userId),
-    paymentService.getUserTransactions(params.userId)
+    userService.getUserDetails(resolvedParams.userId),
+    paymentService.getUserTransactions(resolvedParams.userId),
   ]);
 
   if (!user) {

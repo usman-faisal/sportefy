@@ -12,7 +12,9 @@ interface VenueDetailClientProps {
   venue: VenueDetails;
 }
 
-export const VenueDetailClient: React.FC<VenueDetailClientProps> = ({ venue }) => {
+export const VenueDetailClient: React.FC<VenueDetailClientProps> = ({
+  venue,
+}) => {
   return (
     <>
       <VenueHeader venue={venue} />

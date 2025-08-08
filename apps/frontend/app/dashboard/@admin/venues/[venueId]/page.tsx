@@ -3,11 +3,14 @@ import { VenueDetailClient } from "@/components/common/venues/venue-detail/venue
 import { notFound } from "next/navigation";
 
 interface VenueDetailPageProps {
-  params: { venueId: string };
+  params: Promise<{ venueId: string }>;
 }
 
-export default async function VenueDetailPage({ params }: VenueDetailPageProps) {
-  const venue = await venueService.getVenue(params.venueId);
+export default async function VenueDetailPage({
+  params,
+}: VenueDetailPageProps) {
+  const resolvedParams = await params;
+  const venue = await venueService.getVenue(resolvedParams.venueId);
 
   if (!venue) {
     notFound();

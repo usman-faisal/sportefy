@@ -3,13 +3,17 @@ import { bookingService } from "@/lib/api/services";
 import { notFound } from "next/navigation";
 
 interface BookingDetailPageProps {
-  params: { bookingId: string };
+  params: Promise<{ bookingId: string }>;
 }
 
-export default async function BookingDetailPage({ params }: BookingDetailPageProps) {
-  const resolvedParams = await params
-  const result = await bookingService.getBookingDetails(resolvedParams.bookingId);
-  console.log(result)
+export default async function BookingDetailPage({
+  params,
+}: BookingDetailPageProps) {
+  const resolvedParams = await params;
+  const result = await bookingService.getBookingDetails(
+    resolvedParams.bookingId
+  );
+  console.log(result);
   if (!result) {
     notFound();
   }
@@ -17,7 +21,10 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
   return (
     <div className="flex-col">
       <div className="flex-1 space-y-4 p-8 pt-6">
-        <BookingDetailClient booking={result.booking as any} slot={result.slot} />
+        <BookingDetailClient
+          booking={result.booking as any}
+          slot={result.slot}
+        />
       </div>
     </div>
   );

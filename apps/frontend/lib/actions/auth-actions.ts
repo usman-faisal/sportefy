@@ -28,7 +28,7 @@ export async function signIn(formData: FormData) {
     cookieStore.set("access-token", data.session.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "none",
       maxAge: 60 * 60 * 24 * 7, // 1 week
       path: "/",
     });
@@ -51,11 +51,11 @@ export async function signUp(formData: FormData) {
     email,
     password,
     options: {
-        // This ensures the user is redirected to your site after email confirmation
-        emailRedirectTo: `${
-            process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-        }/auth/callback`,
-    }
+      // This ensures the user is redirected to your site after email confirmation
+      emailRedirectTo: `${
+        process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+      }/auth/callback`,
+    },
   });
 
   if (error) {
