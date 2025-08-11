@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { VenueClient } from "@/components/common/venues/client";
 import { VenueColumn } from "@/components/common/venues/columns";
 import { venueService } from "@/lib/api/services";

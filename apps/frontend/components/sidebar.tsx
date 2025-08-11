@@ -50,68 +50,68 @@ interface NavigationItem {
 }
 
 const globalAdminLinks: NavigationItem[] = [
-  { href: "/dashboard", icon: Home, label: "Dashboard" },
+  { href: "/dashboard/admin", icon: Home, label: "Dashboard" },
   {
-    href: "/dashboard/payments/pending",
+    href: "/dashboard/admin/payments/pending",
     icon: Shield,
     label: "Payment Verification",
   },
-  { href: "/dashboard/users", icon: Users, label: "User Management" },
+  { href: "/dashboard/admin/users", icon: Users, label: "User Management" },
   {
-    href: "/dashboard/user-scopes",
+    href: "/dashboard/admin/user-scopes",
     icon: Users,
     label: "User Scopes",
   },
   {
-    href: "/dashboard/bookings",
+    href: "/dashboard/admin/bookings",
     icon: ClipboardList,
     label: "All Bookings",
   },
   {
-    href: "/dashboard/facilities",
+    href: "/dashboard/admin/facilities",
     icon: Building,
     label: "All Facilities",
   },
   {
-    href: "/dashboard/venues",
+    href: "/dashboard/admin/venues",
     icon: MapPin,
     label: "All Venues",
   },
   {
-    href: "/dashboard/reports",
+    href: "/dashboard/admin/reports",
     icon: BarChart2,
     label: "Global Reports",
   },
 ];
 
 const staffLinks: NavigationItem[] = [
-  { href: "/dashboard", icon: Home, label: "Dashboard" },
+  { href: "/dashboard/staff", icon: Home, label: "Dashboard" },
   {
-    href: "/dashboard/bookings",
+    href: "/dashboard/staff/bookings",
     icon: ClipboardList,
     label: "Bookings",
     permission: (p) => p.hasModeratorScope(),
   },
   {
-    href: "/dashboard/check-in",
+    href: "/dashboard/staff/check-in",
     icon: ScanLine,
     label: "Check-In Scanner",
     permission: (p) => p.hasModeratorScope(),
   },
   {
-    href: "/dashboard/facilities",
+    href: "/dashboard/staff/facilities",
     icon: Building,
     label: "My Facilities",
     permission: (p) => p.hasOwnerScope(),
   },
   {
-    href: "/dashboard/venues",
+    href: "/dashboard/staff/venues",
     icon: MapPin,
     label: "My Venues",
     permission: (p) => p.hasModeratorScope(),
   },
   {
-    href: "/dashboard/reports",
+    href: "/dashboard/staff/reports",
     icon: BarChart2,
     label: "Reports",
   },
@@ -127,7 +127,8 @@ const getNavigationLinks = (
       return permissions.isGlobalAdmin() ? globalAdminLinks : staffLinks;
     case "staff":
       return staffLinks;
-
+    default:
+      return staffLinks;
   }
 };
 

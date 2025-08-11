@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { paymentService } from "@/lib/api/services";
 import { PendingPaymentsClient } from "../components/client";
 import { Payment } from "@sportefy/db-types";

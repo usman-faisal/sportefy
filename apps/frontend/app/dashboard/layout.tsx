@@ -1,30 +1,48 @@
+export const dynamic = "force-dynamic";
 
 import { profileService } from "@/lib/api/services";
-import { PermissionChecker } from "@/lib/utils/permissions";
 import { redirect } from "next/navigation";
-
-interface DashboardLayoutProps {
-  admin: React.ReactNode;
-  staff: React.ReactNode;
-}
+import { AppSidebar } from "@/components/sidebar";
+import UserProvider from "@/lib/context/user-provider";
+import { PermissionChecker } from "@/lib/utils/permissions";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 export default async function DashboardLayout({
-  admin,
-  staff,
-}: DashboardLayoutProps) {
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const profile = await profileService.getProfileWithScopes();
-
+  
   if (!profile) {
     redirect("/auth/login");
   }
 
   const permissions = new PermissionChecker(profile);
   
-  if (permissions.canAccessAdminDashboard()) {
-    return admin;
+  let userRole: "admin" | "staff" = "staff";
+  if (permissions.isGlobalAdmin()) {
+    userRole = "admin";
+  } else if (permissions.canAccessStaffDashboard()) {
+    userRole = "staff";
+  } else {
+    redirect("/unauthorized");
   }
 
-  if (permissions.canAccessStaffDashboard()) {
-    return staff;
-  }
+  return (
+    <SidebarProvider>
+    <UserProvider user={profile}>
+      <div className="flex h-screen bg-background w-full">
+        <AppSidebar
+          userRole={userRole}
+          userScopes={profile.userScopes || []}
+          user={profile}
+        />
+        <main className="flex-1 p-4 w-full overflow-y-auto">
+          {children}
+        </main>
+      </div>
+    </UserProvider>
+    </SidebarProvider>
+  );
 }

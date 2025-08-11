@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { BookingDetailClient } from "@/components/common/bookings/booking-detail/booking-detail-client";
 import { bookingService } from "@/lib/api/services";
 import { notFound } from "next/navigation";

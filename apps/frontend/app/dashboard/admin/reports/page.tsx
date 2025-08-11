@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { reportService } from "@/lib/api/services";
 import { ReportsClient } from "./components/client";
 

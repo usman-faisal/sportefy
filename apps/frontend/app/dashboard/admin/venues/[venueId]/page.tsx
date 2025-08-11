@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { venueService } from "@/lib/api/services";
 import { VenueDetailClient } from "@/components/common/venues/venue-detail/venue-detail-client";
 import { notFound } from "next/navigation";

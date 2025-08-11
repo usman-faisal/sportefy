@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { facilityService, sportService } from "@/lib/api/services";
 import { VenueCreateForm } from "@/components/common/venues/venue-create/venue-create-form";
 
