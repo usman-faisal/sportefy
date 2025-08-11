@@ -23,7 +23,7 @@ import {
   PaginatedResult,
 } from 'src/common/types';
 import { ProfileRepository } from 'src/profile/profile.repository';
-import { and, eq, gt, gte, exists, ConsoleLogWriter } from 'drizzle-orm';
+import { and, eq, gt, gte, exists, ConsoleLogWriter, inArray } from 'drizzle-orm';
 import {
   bookings,
   matches,
@@ -479,5 +479,146 @@ export class BookingService {
     const stats = await this.bookingRepository.getBookingStats();
     
     return ResponseBuilder.success(stats, 'Booking statistics retrieved successfully');
+  }
+
+  /**
+   * Get all bookings for staff members based on their scope (facilities/venues they moderate)
+   * @param searchQuery Search and filter parameters
+   * @param userScopes User's scope information
+   * @returns Paginated bookings result
+   */
+  async getStaffBookings(searchQuery: SearchBookingsQuery, userScopes: any[]): Promise<PaginatedResult<Booking>> {
+    const { limit, offset, page, ...otherSearchQuery } = searchQuery;
+    
+    // Build where conditions including scope restrictions
+    const whereConditions = this.buildStaffWhereConditions(otherSearchQuery, userScopes);
+
+    const total = await this.bookingRepository.count(whereConditions);
+    const data = await this.bookingRepository.getManyBookings(
+      whereConditions,
+      {
+        venue: true,
+        bookedByProfile: true,
+        match: {
+          with: {
+            sport: true,
+          },
+        },
+        slot: true,
+      },
+      limit,
+      offset,
+      (bookings, { desc }) => desc(bookings.createdAt),
+    );
+
+    const paginationLimit = limit || 10;
+    const paginationPage = page || 1;
+
+    const totalPages = Math.ceil(total / paginationLimit);
+    const hasNext = paginationPage < totalPages;
+    const hasPrev = paginationPage > 1;
+
+    this.logger.log(
+      `Fetched ${data.length} staff bookings on page ${paginationPage} with limit ${paginationLimit}`,
+    );
+    return ResponseBuilder.paginated(data, {
+      page: paginationPage,
+      limit: paginationLimit,
+      total,
+      totalPages,
+      hasNext,
+      hasPrev,
+    });
+  }
+
+  /**
+   * Get booking statistics for staff based on their scope
+   * @param userScopes User's scope information
+   * @returns Booking statistics object
+   */
+  async getStaffBookingStats(userScopes: any[]) {
+    // Build where conditions for staff scope
+    const whereConditions = this.buildStaffWhereConditions({}, userScopes);
+    
+    const stats = await this.bookingRepository.getBookingStats(whereConditions);
+    
+    return ResponseBuilder.success(stats, 'Staff booking statistics retrieved successfully');
+  }
+
+  /**
+   * Builds the where conditions for staff bookings based on their scope.
+   * @param query The search criteria for bookings.
+   * @param userScopes User's scope information
+   * @returns SQL conditions for the query.
+   */
+  private buildStaffWhereConditions(
+    query: Partial<SearchBookingsQuery>,
+    userScopes: any[]
+  ): SQL<unknown> | undefined {
+    const conditions: any[] = [];
+
+    // Add scope restrictions based on user's access
+    const accessibleVenueIds = userScopes
+      .filter(scope => scope.venueId)
+      .map(scope => scope.venueId);
+
+    const accessibleFacilityIds = userScopes
+      .filter(scope => scope.facilityId)
+      .map(scope => scope.facilityId);
+
+    if (accessibleVenueIds.length > 0) {
+      conditions.push(
+        accessibleVenueIds.length === 1 
+          ? eq(bookings.venueId, accessibleVenueIds[0])
+          : inArray(bookings.venueId, accessibleVenueIds)
+      );
+    }
+
+    if (accessibleFacilityIds.length > 0) {
+      conditions.push(
+        exists(
+          this.bookingRepository.db
+            .select()
+            .from(venues)
+            .where(
+              and(
+                eq(venues.id, bookings.venueId),
+                inArray(venues.facilityId, accessibleFacilityIds)
+              ),
+            ),
+        ),
+      );
+    }
+
+    // Add other search conditions
+    if (query.venueId) {
+      conditions.push(eq(bookings.venueId, query.venueId));
+    }
+
+    if (query.status) {
+      conditions.push(eq(bookings.status, query.status));
+    }
+
+    if (query.bookedBy) {
+      conditions.push(eq(bookings.bookedBy, query.bookedBy));
+    }
+
+    if (query.sportId) {
+      conditions.push(
+        exists(
+          this.bookingRepository.db
+            .select()
+            .from(matches)
+            .where(
+              and(
+                eq(matches.bookingId, bookings.id),
+                eq(matches.sportId, query.sportId),
+              ),
+            ),
+        ),
+      );
+    }
+
+    return conditions.length > 0 ? and(...conditions) : undefined;
   }
 }

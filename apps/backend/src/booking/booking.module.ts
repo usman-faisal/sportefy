@@ -15,6 +15,7 @@ import { CheckInService } from 'src/check-in/check-in.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { VenueSportModule } from 'src/venue-sport/venue-sport.module';
 import { CheckInModule } from 'src/check-in/check-in.module';
+import { UserScopeModule } from 'src/user-scope/user-scope.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { CheckInModule } from 'src/check-in/check-in.module';
       inject: [ConfigService],
     }),
     VenueSportModule,
+    UserScopeModule,
   ],
   providers: [BookingService, BookingRepository, BookingSchedulerService],
   controllers: [BookingController],

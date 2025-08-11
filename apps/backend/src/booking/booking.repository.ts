@@ -225,7 +225,7 @@ export class BookingRepository extends BaseRepository {
       );
   }
 
-  async getBookingStats(tx?: DrizzleTransaction): Promise<{
+  async getBookingStats(where?: SqlUnknown, tx?: DrizzleTransaction): Promise<{
     totalRevenue: number;
     totalBookings: number;
     confirmedBookings: number;
@@ -239,7 +239,8 @@ export class BookingRepository extends BaseRepository {
         totalRevenue: sum(bookings.totalCredits),
         totalBookings: count(),
       })
-      .from(bookings);
+      .from(bookings)
+      .where(where);
 
     // Get confirmed bookings count
     const [confirmedStats] = await dbClient
@@ -247,7 +248,7 @@ export class BookingRepository extends BaseRepository {
         confirmedBookings: count(),
       })
       .from(bookings)
-      .where(eq(bookings.status, 'confirmed'));
+      .where(where ? and(eq(bookings.status, 'confirmed'), where) : eq(bookings.status, 'confirmed'));
 
     // Get cancelled bookings count
     const [cancelledStats] = await dbClient
@@ -255,7 +256,7 @@ export class BookingRepository extends BaseRepository {
         cancelledBookings: count(),
       })
       .from(bookings)
-      .where(eq(bookings.status, 'cancelled'));
+      .where(where ? and(eq(bookings.status, 'cancelled'), where) : eq(bookings.status, 'cancelled'));
 
     return {
       totalRevenue: Number(totalStats.totalRevenue) || 0,
