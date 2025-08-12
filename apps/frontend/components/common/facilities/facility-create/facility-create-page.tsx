@@ -10,7 +10,7 @@ export function FacilityCreatePage() {
   const router = useRouter();
 
   const handleBack = () => {
-    router.push("/dashboard/facilities");
+    router.back();
   };
 
   return (

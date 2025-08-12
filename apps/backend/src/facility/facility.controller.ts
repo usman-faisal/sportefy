@@ -84,7 +84,7 @@ export class FacilityController {
   })
   @ApiBody({
     type: PartialType(
-      OmitType(CreateFacilityDto, ['operatingHours', 'ownerId', 'media']),
+      OmitType(CreateFacilityDto, ['operatingHours', 'media']),
     ),
     description: 'Data for updating the facility',
   })

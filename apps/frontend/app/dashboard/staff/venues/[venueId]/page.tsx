@@ -248,8 +248,8 @@ export default async function VenueDetailPage({
                     <CardContent>
                       <div className="flex flex-wrap gap-2">
                         {venueData.sports.map((sport: any) => (
-                          <Badge key={sport.id} variant="outline">
-                            {sport.sport?.name || sport.id}
+                          <Badge key={sport.name} variant="outline">
+                            {sport.name}
                           </Badge>
                         ))}
                       </div>

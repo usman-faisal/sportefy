@@ -10,7 +10,6 @@ import { Media } from "@/components/common/media/media";
 import { FacilityHeader } from "./facility-header";
 import { FacilityBasicInfo } from "./facility-basic-info";
 import { FacilityVenues } from "./facility-venues";
-import { FacilityOwner } from "./facility-owner";
 import { FacilityQuickStats } from "./facility-quick-stats";
 import { FacilityDeleteDialog } from "./facility-delete-dialog";
 
@@ -23,11 +22,11 @@ export default function FacilityDetail({ facility }: FacilityDetailProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleBack = () => {
-    router.push("/dashboard/facilities");
+    router.push("/dashboard/admin/facilities");
   };
 
   const handleEdit = () => {
-    router.push(`/dashboard/facilities/${facility.id}/edit`);
+    router.push(`/dashboard/admin/facilities/${facility.id}/edit`);
   };
 
   const handleDelete = () => {
@@ -52,7 +51,6 @@ export default function FacilityDetail({ facility }: FacilityDetailProps) {
         </div>
 
         <div className="space-y-6">
-          <FacilityOwner owner={facility.owner} />
           <FacilityQuickStats
             venue={facility.venue}
             operatingHours={facility.operatingHours}

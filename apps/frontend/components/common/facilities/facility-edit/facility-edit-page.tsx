@@ -15,13 +15,12 @@ export function FacilityEditPage({ facility }: FacilityEditPageProps) {
   const router = useRouter();
 
   const handleBack = () => {
-    router.push(`/dashboard/facilities/${facility.id}`);
+    router.back();
   };
 
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="outline" size="sm" onClick={handleBack}>
           <ArrowLeft className="h-4 w-4 mr-2" />

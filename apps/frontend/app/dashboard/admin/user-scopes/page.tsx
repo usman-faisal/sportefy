@@ -50,7 +50,7 @@ export default async function UserScopesPage() {
                         <Users className="h-4 w-4" />
                         <span>Manage Scopes</span>
                       </div>
-                      <Link href={`/dashboard/user-scopes/facilities/${facility.id}`}>
+                      <Link href={`/dashboard/admin/user-scopes/facilities/${facility.id}`}>
                         <Button size="sm" variant="outline">
                           Manage
                         </Button>
@@ -94,7 +94,7 @@ export default async function UserScopesPage() {
                         <Users className="h-4 w-4" />
                         <span>Manage Scopes</span>
                       </div>
-                      <Link href={`/dashboard/user-scopes/venues/${venue.id}`}>
+                      <Link href={`/dashboard/admin/user-scopes/venues/${venue.id}`}>
                         <Button size="sm" variant="outline">
                           Manage
                         </Button>

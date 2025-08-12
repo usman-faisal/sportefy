@@ -3,7 +3,6 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsNotEmpty,
-  IsUUID,
   MaxLength,
   ValidateNested,
 } from 'class-validator';
@@ -14,11 +13,6 @@ export class CreateFacilityDto {
   @ApiProperty()
   @IsNotEmpty()
   name: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsUUID()
-  ownerId: string;
 
   @ApiProperty()
   @IsNotEmpty()

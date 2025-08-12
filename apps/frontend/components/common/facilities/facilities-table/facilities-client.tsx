@@ -64,11 +64,11 @@ export const FacilitiesClient: React.FC<FacilitiesClientProps> = ({
   };
 
   const handleViewDetails = (facilityId: string) => {
-    router.push(`/dashboard/facilities/${facilityId}`);
+    router.push(`/dashboard/admin/facilities/${facilityId}`);
   };
 
   const handleAddFacility = () => {
-    router.push("/dashboard/facilities/create");
+    router.push("/dashboard/admin/facilities/create");
   };
 
   // Transform facilities data to match the column structure

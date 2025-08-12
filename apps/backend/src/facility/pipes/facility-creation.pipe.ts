@@ -12,10 +12,6 @@ export class FacilityCreationPipe implements PipeTransform {
         throw new BadRequestException('User not found in request');
     }
 
-    if (user.id === value.ownerId) {
-        throw new BadRequestException('Admin cannot assign themself as the facility owner.');
-    }
-
     return value;
   }
 }

@@ -104,7 +104,6 @@ export interface UpdateFacilityDto {
 
 export interface CreateFacilityDto {
   name: string;
-  ownerId: string;
   description: string;
   phoneNumber: string;
   address: string;

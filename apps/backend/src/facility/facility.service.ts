@@ -91,17 +91,7 @@ export class FacilityService {
         ...facilityData,
       });
 
-      const [newUserScope] = await Promise.all([
-        this.userScopeRepository.createUserScope(
-          {
-            userId: createFacilityDto.ownerId,
-            facilityId: newFacility.id,
-            grantedAt: new Date(),
-            grantedBy: adminId,
-            role: ScopeRole.OWNER,
-          },
-          tx,
-        ),
+      await Promise.all([
         operatingHours.length > 0 &&
           this.operatingHourRepository.createManyOperatingHours(
             operatingHours.map(
@@ -126,7 +116,7 @@ export class FacilityService {
           ),
       ]);
 
-      return [newFacility, newUserScope];
+      return newFacility;
     });
 
     this.logger.log(`New facility created by admin ID: ${adminId}`);

@@ -32,17 +32,11 @@ import {
 } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { createFacility } from "@/lib/actions/facility-actions";
-import { OwnerSearch } from "./owner-search";
 import { DayOfWeek, MediaEntityType } from "@/lib/types";
 import { MediaUploader } from "../../media/media-uploader";
 
 const facilitySchema = z.object({
   name: z.string().min(1, "Facility name is required"),
-  ownerId: z
-    .string()
-    .uuid(
-      "Valid owner ID is required. Please select an owner from the search."
-    ),
   description: z
     .string()
     .min(1, "Description is required")
@@ -80,7 +74,6 @@ export function FacilityCreateForm() {
     resolver: zodResolver(facilitySchema),
     defaultValues: {
       name: "",
-      ownerId: "",
       description: "",
       phoneNumber: "",
       address: "",
@@ -109,9 +102,6 @@ export function FacilityCreateForm() {
     name: "media",
   });
 
-  const handleOwnerSelect = (ownerId: string) => {
-    form.setValue("ownerId", ownerId, { shouldValidate: true });
-  };
 
   const onSubmit = async (data: FacilityFormData) => {
     setError(null);
@@ -151,19 +141,7 @@ export function FacilityCreateForm() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="ownerId"
-                render={() => (
-                  <FormItem>
-                    <FormLabel>Owner</FormLabel>
-                    <FormControl>
-                      <OwnerSearch onOwnerSelect={handleOwnerSelect} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
             </div>
             <FormField
               control={form.control}

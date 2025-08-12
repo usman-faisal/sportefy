@@ -10,8 +10,6 @@ import { media } from "./media.schema";
 export const facilities = pgTable('facilities', {
     id: uuid('id').primaryKey().defaultRandom(),
 
-    ownerId: uuid('owner_id').references(() => users.id),
-
     name: varchar(),
 
     description: text(),
@@ -30,10 +28,6 @@ export const facilities = pgTable('facilities', {
 export const facilitiesRelations = relations(facilities, ({one,many}) => ({
     venues: many(venues),
     operatingHours: many(operatingHours),
-    owner: one(users, {
-        fields: [facilities.ownerId],
-        references: [users.id]
-    }),
     userScopes: many(userScopes),
     media: many(media),
 }))

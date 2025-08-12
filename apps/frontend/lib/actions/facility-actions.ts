@@ -13,7 +13,6 @@ import { Facility } from "@sportefy/db-types";
 
 type FacilityCreateData = {
   name: string;
-  ownerId: string;
   description: string;
   phoneNumber: string;
   address: string;
@@ -48,13 +47,8 @@ type FacilityUpdateData = {
 
 export async function createFacility(data: FacilityCreateData) {
   try {
-    if (!data.ownerId) {
-      throw new Error("Owner ID is required to create a facility.");
-    }
-
     const createPayload = {
       name: data.name,
-      ownerId: data.ownerId,
       description: data.description,
       phoneNumber: data.phoneNumber,
       address: data.address,
