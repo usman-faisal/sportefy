@@ -6,12 +6,12 @@ import {
 } from '@nestjs/common';
 import { MatchRepository } from './match.repository';
 import { UpdateMatchDto } from './dto/update-match.dto';
-import { Profile, users, venueSports } from '@sportefy/db-types';
+import { Profile, slots, users, venueSports } from '@sportefy/db-types';
 import { and, eq, gte, inArray, lte, or } from 'drizzle-orm';
 import { matches, matchPlayers } from '@sportefy/db-types';
 import { ResponseBuilder } from 'src/common/utils/response-builder';
 import { MatchPlayerRepository } from 'src/match-player/match-player.repository';
-import { MatchType, PaymentSplitType } from 'src/common/types';
+import { MatchType, PaymentSplitType, SlotEventType } from 'src/common/types';
 import { ProfileRepository } from 'src/profile/profile.repository';
 import { FilterMatchesDto } from './dto/filter-match.dto';
 import { bookings, sports, venues } from '@sportefy/db-types';
@@ -400,11 +400,18 @@ export class MatchService {
         booking: bookings,
         venue: venues,
         sport: sports,
+        slot: slots,
+        matchPlayers: matchPlayers
       })
       .from(matches)
       .leftJoin(bookings, eq(matches.bookingId, bookings.id))
       .leftJoin(venues, eq(bookings.venueId, venues.id))
       .leftJoin(sports, eq(matches.sportId, sports.id))
+      .leftJoin(slots, and(
+        eq(slots.eventId, bookings.id),
+        eq(slots.eventType, SlotEventType.BOOKING)
+      ))
+      .leftJoin(matchPlayers, eq(matches.id, matchPlayers.matchId))
       .where(and(...conditions));
 
     const filteredMatches = await query;
