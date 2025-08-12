@@ -93,7 +93,23 @@ export default async function StaffVenuesPage() {
                       {venue.availability && (
                         <div className="flex items-center space-x-2">
                           <Calendar className="h-4 w-4" />
-                          <span>Status: {venue.availability}</span>
+                          <span>Status: </span>
+                          <Badge 
+                            variant={
+                              venue.availability === 'active' ? "default" : 
+                              venue.availability === 'maintenance' ? "destructive" : 
+                              "secondary"
+                            }
+                            className={
+                              venue.availability === 'active' ? "bg-green-600 hover:bg-green-700" :
+                              venue.availability === 'maintenance' ? "bg-orange-600 hover:bg-orange-700" :
+                              "bg-gray-600 hover:bg-gray-700"
+                            }
+                          >
+                            {venue.availability === 'active' ? "Active" : 
+                             venue.availability === 'maintenance' ? "Maintenance" : 
+                             "Inactive"}
+                          </Badge>
                         </div>
                       )}
                     </div>

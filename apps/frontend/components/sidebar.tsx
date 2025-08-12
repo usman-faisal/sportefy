@@ -90,19 +90,13 @@ const staffLinks: NavigationItem[] = [
     href: "/dashboard/staff/bookings",
     icon: ClipboardList,
     label: "Bookings",
-    permission: (p) => p.hasModeratorScope(),
-  },
-  {
-    href: "/dashboard/staff/check-in",
-    icon: ScanLine,
-    label: "Check-In Scanner",
-    permission: (p) => p.hasModeratorScope(),
+    permission: (p) => p.hasModeratorScope() || p.hasOwnerScope(),
   },
   {
     href: "/dashboard/staff/facilities",
     icon: Building,
     label: "My Facilities",
-    permission: (p) => p.hasOwnerScope(),
+    permission: (p) => p.hasModeratorScope() || p.hasOwnerScope(),
   },
   {
     href: "/dashboard/staff/venues",

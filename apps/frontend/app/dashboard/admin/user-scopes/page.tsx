@@ -80,9 +80,27 @@ export default async function UserScopesPage() {
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg">{venue.name}</CardTitle>
-                      <Badge variant="outline">
-                        {venue.facilityId ? "Facility Venue" : "Standalone"}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant={
+                            venue.availability === 'active' ? "default" : 
+                            venue.availability === 'maintenance' ? "destructive" : 
+                            "secondary"
+                          }
+                          className={
+                            venue.availability === 'active' ? "bg-green-600 hover:bg-green-700" :
+                            venue.availability === 'maintenance' ? "bg-orange-600 hover:bg-orange-700" :
+                            "bg-gray-600 hover:bg-gray-700"
+                          }
+                        >
+                          {venue.availability === 'active' ? "Active" : 
+                           venue.availability === 'maintenance' ? "Maintenance" : 
+                           "Inactive"}
+                        </Badge>
+                        <Badge variant="outline">
+                          {venue.facilityId ? "Facility Venue" : "Standalone"}
+                        </Badge>
+                      </div>
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {venue.address}

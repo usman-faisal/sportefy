@@ -14,6 +14,7 @@ type VenueFormData = {
   sportIds: string[];
   basePrice: number;
   capacity: number;
+  availability: 'active' | 'inactive' | 'maintenance';
   operatingHours: Array<{
     id?: number;
     dayOfWeek: DayOfWeek;
@@ -31,6 +32,7 @@ export async function createVenue(facilityId: string, data: VenueFormData) {
   try {
     const createPayload: CreateVenueDto = {
       ...data,
+      availability: data.availability,
       media: data.media?.map((m) => ({
         mediaLink: m.url,
         mediaType: m.type as MediaType,
@@ -59,6 +61,7 @@ export async function updateVenue(facilityId: string, venueId: string, data: Ven
       sportIds: data.sportIds,
       basePrice: data.basePrice,
       capacity: data.capacity,
+      availability: data.availability,
     };
 
     const venueUpdatePromise = venueService.updateVenue(facilityId, venueId, updatePayload);

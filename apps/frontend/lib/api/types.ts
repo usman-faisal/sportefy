@@ -134,6 +134,7 @@ export interface CreateVenueDto {
   sportIds: string[];
   basePrice: number;
   capacity: number;
+  availability?: 'active' | 'inactive' | 'maintenance';
   operatingHours: CreateOperatingHourDto[];
   media: CreateMediaDto[];
 }
@@ -143,6 +144,7 @@ export interface UpdateVenueDto {
   sportIds?: string[];
   basePrice?: number;
   capacity?: number;
+  availability?: 'active' | 'inactive' | 'maintenance';
 }
 
 export interface VenueDetails extends Venue {

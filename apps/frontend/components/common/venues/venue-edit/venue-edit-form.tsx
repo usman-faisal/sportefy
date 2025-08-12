@@ -24,6 +24,7 @@ const venueEditSchema = z.object({
   name: z.string().min(1, "Venue name is required"),
   basePrice: z.number().min(0, "Base price must be a positive number"),
   capacity: z.number().int().min(1, "Capacity must be at least 1"),
+  availability: z.enum(['active', 'inactive', 'maintenance']),
   sportIds: z.array(z.string().uuid()).min(1, "At least one sport must be selected"),
   operatingHours: z.array(
     z.object({
@@ -66,6 +67,7 @@ export function VenueEditForm({ venue, sports, initialOperatingHours, initialMed
       name: venue.name || "",
       basePrice: Number(venue.basePrice) || 0,
       capacity: Number(venue.capacity) || 1,
+      availability: venue.availability || 'active',
       sportIds: venue.sports?.map(s => s.id) || [],
       operatingHours: initialOperatingHours?.map(oh => ({
         id: oh.id,
@@ -100,6 +102,7 @@ export function VenueEditForm({ venue, sports, initialOperatingHours, initialMed
       sportIds: data.sportIds,
       basePrice: Number(data.basePrice),
       capacity: Number(data.capacity),
+      availability: data.availability,
       operatingHours: data.operatingHours,
       media: data.media?.filter((m) => m.url).map(m => ({ 
         url: m.url, 
@@ -192,6 +195,24 @@ export function VenueEditForm({ venue, sports, initialOperatingHours, initialMed
                   </FormItem>
                 )} />
               </div>
+              <FormField control={form.control} name="availability" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Availability Status</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select availability status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="maintenance">Maintenance</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
               <FormField control={form.control} name="sportIds" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Sports</FormLabel>

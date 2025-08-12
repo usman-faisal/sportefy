@@ -13,6 +13,7 @@ export default async function VenuesPage() {
     facilityId: item.facilityId,
     facilityName: "No Facility", // TODO: Include facility relation in backend or make separate call
     address: item.address ?? "No Address",
+    availability: item.availability ?? 'inactive',
     createdAt: item.createdAt ? format(new Date(item.createdAt), "MMMM do, yyyy") : "N/A",
   })) || [];
 

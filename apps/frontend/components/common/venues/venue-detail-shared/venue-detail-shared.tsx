@@ -59,9 +59,27 @@ export function VenueDetailShared({
                   </Button>
                 </Link>
                 <div>
-                  <h1 className="text-3xl font-bold tracking-tight">
-                    {venue.name}
-                  </h1>
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-3xl font-bold tracking-tight">
+                      {venue.name}
+                    </h1>
+                    <Badge 
+                      variant={
+                        venue.availability === 'active' ? "default" : 
+                        venue.availability === 'maintenance' ? "destructive" : 
+                        "secondary"
+                      }
+                      className={
+                        venue.availability === 'active' ? "bg-green-600 hover:bg-green-700" :
+                        venue.availability === 'maintenance' ? "bg-orange-600 hover:bg-orange-700" :
+                        "bg-gray-600 hover:bg-gray-700"
+                      }
+                    >
+                      {venue.availability === 'active' ? "Active" : 
+                       venue.availability === 'maintenance' ? "Maintenance" : 
+                       "Inactive"}
+                    </Badge>
+                  </div>
                   <p className="text-muted-foreground mt-2">
                     Venue Details and Management
                   </p>
@@ -161,8 +179,21 @@ export function VenueDetailShared({
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Status:</span>
-                    <Badge variant={venue.availability === 'active' ? "default" : "secondary"}>
-                      {venue.availability === 'active' ? "Active" : venue.availability === 'maintenance' ? "Maintenance" : "Inactive"}
+                    <Badge 
+                      variant={
+                        venue.availability === 'active' ? "default" : 
+                        venue.availability === 'maintenance' ? "destructive" : 
+                        "secondary"
+                      }
+                      className={
+                        venue.availability === 'active' ? "bg-green-600 hover:bg-green-700" :
+                        venue.availability === 'maintenance' ? "bg-orange-600 hover:bg-orange-700" :
+                        "bg-gray-600 hover:bg-gray-700"
+                      }
+                    >
+                      {venue.availability === 'active' ? "Active" : 
+                       venue.availability === 'maintenance' ? "Maintenance" : 
+                       "Inactive"}
                     </Badge>
                   </div>
                   
