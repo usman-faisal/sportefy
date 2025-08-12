@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { Suspense } from "react";
 import { facilityService } from "@/lib/api/services";
 import { notFound } from "next/navigation";
-import FacilityDetail from "@/components/common/facilities/facility-detail/facility-detail";
+import { FacilityDetailShared } from "@/components/common/facilities/facility-detail-shared";
 
 interface FacilityDetailPageProps {
   params: Promise<{
@@ -40,7 +40,13 @@ export default async function FacilityDetailPage({
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <FacilityDetail facility={data.facility} />
+      <FacilityDetailShared
+        facility={data.facility}
+        backHref="/dashboard/admin/facilities"
+        editHref={`/dashboard/admin/facilities/${data.facility.id}/edit`}
+        showDeleteButton={true}
+        userType="admin"
+      />
     </Suspense>
   );
 }

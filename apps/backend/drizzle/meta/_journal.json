@@ -71,6 +71,13 @@
       "when": 1754061706544,
       "tag": "0009_soft_thunderbolt_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1755003409083,
+      "tag": "0010_typical_psynapse",
+      "breakpoints": true
     }
   ]
 }

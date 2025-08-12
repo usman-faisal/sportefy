@@ -27,14 +27,13 @@ export class FacilityService {
   private readonly logger = new Logger(FacilityService.name);
   constructor(
     @Inject(DRIZZLE_CLIENT) private readonly db: DrizzleClient,
-    private readonly userScopeRepository: UserScopeRepository,
     private readonly operatingHourRepository: OperatingHourRepository,
     private readonly facilityRepository: FacilityRepository,
     private readonly mediaRepository: MediaRepository,
     private readonly unitOfWork: UnitOfWork,
   ) {}
 
-  /**
+  /**   
    * Retrieves a paginated list of facilities based on search criteria.
    * @param searchQuery The search criteria for facilities.
    * @param pagination The pagination parameters.
@@ -160,11 +159,6 @@ export class FacilityService {
     facilitiesWithInput: FacilitiesWithInput = {
       operatingHours: true,
       venues: true,
-      owner: {
-        with: {
-          profile: true,
-        },
-      },
       media: true,
     },
   ) {

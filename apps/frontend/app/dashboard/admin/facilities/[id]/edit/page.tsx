@@ -1,24 +1,50 @@
 export const dynamic = "force-dynamic";
 
-import { FacilityEditPage } from "@/components/common/facilities/facility-edit/facility-edit-page";
+import { Suspense } from "react";
 import { facilityService } from "@/lib/api/services";
 import { notFound } from "next/navigation";
+import { FacilityEditShared } from "@/components/common/facilities/facility-edit-shared";
 
-interface EditFacilityPageProps {
+interface FacilityEditPageProps {
   params: Promise<{
     id: string;
   }>;
 }
 
-export default async function EditFacilityPage({
-  params,
-}: EditFacilityPageProps) {
-  const resolvedParams = await params;
-  const facility = await facilityService.getFacility(resolvedParams.id);
+async function getFacilityData(id: string) {
+  try {
+    const facility = await facilityService.getFacility(id);
 
-  if (!facility) {
+    if (!facility) {
+      return null;
+    }
+
+    return {
+      facility,
+    };
+  } catch (error) {
+    console.error("Error fetching facility:", error);
+    return null;
+  }
+}
+
+export default async function FacilityEditPage({
+  params,
+}: FacilityEditPageProps) {
+  const { id } = await params;
+  const data = await getFacilityData(id);
+
+  if (!data) {
     notFound();
   }
 
-  return <FacilityEditPage facility={facility} />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <FacilityEditShared
+        facility={data.facility}
+        backHref={`/dashboard/admin/facilities/${data.facility.id}`}
+        userType="admin"
+      />
+    </Suspense>
+  );
 }

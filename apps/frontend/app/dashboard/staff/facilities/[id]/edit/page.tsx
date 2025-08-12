@@ -1,12 +1,10 @@
 export const dynamic = "force-dynamic";
 
-import { FacilityEditForm } from "@/components/common/facilities/facility-edit/faciility-edit-form";
+import { Suspense } from "react";
 import { facilityService } from "@/lib/api/services";
 import { profileService } from "@/lib/api/services";
 import { notFound, redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { FacilityEditShared } from "@/components/common/facilities/facility-edit-shared";
 
 interface EditFacilityPageProps {
   params: Promise<{
@@ -50,27 +48,12 @@ export default async function StaffEditFacilityPage({
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="sm" asChild>
-          <Link href={`/dashboard/staff/facilities/${facility.id}`}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Facility
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Edit {facility.name || "Facility"}
-          </h1>
-          <p className="text-muted-foreground">Update facility information</p>
-        </div>
-      </div>
-
-      <FacilityEditForm
+    <Suspense fallback={<div>Loading...</div>}>
+      <FacilityEditShared
         facility={facility}
-        initialOperatingHours={facility.operatingHours || []}
-        initialMedia={facility.media || []}
+        backHref={`/dashboard/staff/facilities/${facility.id}`}
+        userType="staff"
       />
-    </div>
+    </Suspense>
   );
 }

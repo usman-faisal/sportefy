@@ -125,8 +125,7 @@ export function FacilityEditForm({
 
     const result = await updateFacility(facility.id, payload);
     if (result.success) {
-      router.push(`${facility.id}`);
-      router.refresh();
+      router.back();
     } else {
       setError(result.error || "An unknown error occurred.");
     }

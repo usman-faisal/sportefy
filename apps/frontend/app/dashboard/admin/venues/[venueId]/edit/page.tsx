@@ -1,4 +1,6 @@
-import { VenueEditForm } from "@/components/common/venues/venue-edit/venue-edit-form";
+export const dynamic = "force-dynamic";
+
+import { VenueEditShared } from "@/components/common/venues/venue-edit-shared";
 import {
   venueService,
   sportService,
@@ -26,16 +28,14 @@ const VenueEditPage = async ({ params }: VenueEditPageProps) => {
   }
 
   return (
-    <div className="flex-col">
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <VenueEditForm
-          venue={venue}
-          sports={sports || []}
-          initialOperatingHours={operatingHours || []}
-          initialMedia={media || []}
-        />
-      </div>
-    </div>
+    <VenueEditShared
+      venue={venue}
+      sports={sports || []}
+      operatingHours={operatingHours || []}
+      media={media || []}
+      backHref={`/dashboard/admin/venues/${venue.id}`}
+      userType="admin"
+    />
   );
 };
 

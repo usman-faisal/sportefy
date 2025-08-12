@@ -91,7 +91,6 @@ export interface OwnerWithProfile extends Profile {
 export interface FacilityDetails extends Facility {
   venue: Venue;
   operatingHours: OperatingHour[];
-  owner: OwnerWithProfile;
   media: Media[];
 }
 

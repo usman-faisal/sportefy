@@ -238,7 +238,7 @@ export function AppSidebar({
         <SidebarMenuItem key={group.id}>
           <SidebarMenuButton asChild>
             <Link
-              href={`/dashboard/staff/${group.type}s/${group.id}`}
+              href={`/dashboard/staff/${group.type === "facility" ? "facilities" : "venues"}/${group.id}`}
               className="flex items-center gap-3"
             >
               {group.type === "facility" ? (

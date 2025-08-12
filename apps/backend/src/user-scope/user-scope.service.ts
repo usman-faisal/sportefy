@@ -43,15 +43,10 @@ export class UserScopeService {
     const newUserScope = await this.userScopeRepository.createUserScope({
       ...createUserScopeDto,
       facilityId: facilityId,
+      role: createUserScopeDto.role,
       grantedBy: userId,
       grantedAt: new Date(),
     });
-
-    if (createUserScopeDto.role === ScopeRole.OWNER) {
-      await this.facilityRepository.updateFacilityById(facilityId, {
-        ownerId: createUserScopeDto.userId,
-      });
-    }
 
     return ResponseBuilder.created(
       newUserScope,
@@ -93,14 +88,6 @@ export class UserScopeService {
         and(eq(userScopes.userId, userId), eq(getScopeId(scope), scopeId)),
         tx,
       );
-      if (deletedScope.facilityId && deletedScope.role === ScopeRole.OWNER) {
-        await this.facilityRepository.updateFacilityById(
-          deletedScope.facilityId,
-          {
-            ownerId: undefined,
-          },
-        );
-      }
     });
     return ResponseBuilder.deleted('User scope removed successfully');
   }

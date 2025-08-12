@@ -1,6 +1,5 @@
-import { pgEnum, pgTable, uuid, timestamp, text, varchar, time, serial, boolean } from "drizzle-orm/pg-core";
+import { pgTable, uuid, timestamp, text, varchar } from "drizzle-orm/pg-core";
 import { InferInsertModel, InferSelectModel, relations } from "drizzle-orm";
-import { users } from "./users.schema";
 import { venues } from "./venues.schema";
 import { operatingHours } from "./operating-hours.schema";
 import { userScopes } from "./user-scopes.schema";

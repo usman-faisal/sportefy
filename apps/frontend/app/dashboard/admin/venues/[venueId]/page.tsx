@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { venueService } from "@/lib/api/services";
-import { VenueDetailClient } from "@/components/common/venues/venue-detail/venue-detail-client";
+import { VenueDetailShared } from "@/components/common/venues/venue-detail-shared";
 import { notFound } from "next/navigation";
 
 interface VenueDetailPageProps {
@@ -19,10 +19,12 @@ export default async function VenueDetailPage({
   }
 
   return (
-    <div className="flex-col">
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <VenueDetailClient venue={venue} />
-      </div>
-    </div>
+    <VenueDetailShared
+      venue={venue}
+      backHref="/dashboard/admin/venues"
+      editHref={`/dashboard/admin/venues/${venue.id}/edit`}
+      showDeleteButton={true}
+      userType="admin"
+    />
   );
 }
