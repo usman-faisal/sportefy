@@ -160,10 +160,8 @@ export class SlotService {
     const { date, startDate, endDate } = query;
     let conditions: any;
 
-    console.log(`Fetching slots for venue ${venueId} with query:`, query);
 
     if (date) {
-      console.log(`Querying for single date: ${date}`);
       const dayStart = startOfDay(parseISO(date));
       const dayEnd = endOfDay(parseISO(date));
 
@@ -172,7 +170,6 @@ export class SlotService {
         between(slots.startTime, dayStart, dayEnd),
       );
     } else if (startDate && endDate) {
-      console.log(`Querying for date range: ${startDate} to ${endDate}`);
       const parsedStartDate = parseISO(startDate);
       const parsedEndDate = parseISO(endDate);
 

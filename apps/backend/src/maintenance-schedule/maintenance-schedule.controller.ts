@@ -15,7 +15,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { ScopeRole, UserRole } from 'src/common/types';
+import { Scope, ScopeRole, UserRole } from 'src/common/types';
 import { CreateMaintenanceScheduleDto } from './dto/create-maintenance-schedule.dto';
 import { UpdateMaintenanceScheduleDto } from './dto/update-maintenance-schedule.dto';
 import { MaintenanceScheduleService } from './maintenance-schedule.service';
@@ -39,7 +39,7 @@ export class MaintenanceScheduleController {
     status: 200,
     description: 'Returns a list of maintenance schedules.',
   })
-  @ApiScope([ScopeRole.OWNER, ScopeRole.MODERATOR])
+  @ApiScope([ScopeRole.OWNER, ScopeRole.MODERATOR], [Scope.VENUE, 'venueId'])
   getMaintenanceSchedules(@Param('venueId') venueId: string) {
     return this.maintenanceScheduleService.getMaintenanceSchedules(venueId);
   }
@@ -52,15 +52,18 @@ export class MaintenanceScheduleController {
     status: 201,
     description: 'Maintenance schedule created successfully.',
   })
-  @ApiScope([ScopeRole.OWNER, ScopeRole.MODERATOR])
+  @ApiScope([ScopeRole.OWNER, ScopeRole.MODERATOR], [Scope.VENUE, 'venueId'])
   async createMaintenanceSchedule(
     @CurrentUser() user: Profile,
     @Param('venueId') venueId: string,
     @Body() createMaintenanceScheduleDto: CreateMaintenanceScheduleDto,
   ) {
     return this.maintenanceScheduleService.createMaintenanceSchedule(
+
       venueId,
+      user.id,
       createMaintenanceScheduleDto,
+
     );
   }
 
@@ -77,7 +80,7 @@ export class MaintenanceScheduleController {
     status: 200,
     description: 'Maintenance schedule updated successfully.',
   })
-  @ApiScope([ScopeRole.OWNER, ScopeRole.MODERATOR])
+  @ApiScope([ScopeRole.OWNER, ScopeRole.MODERATOR], [Scope.VENUE, 'venueId'])
   async updateMaintenanceSchedule(
     @CurrentUser() user: Profile,
     @Param('venueId') venueId: string,
@@ -102,7 +105,7 @@ export class MaintenanceScheduleController {
     status: 200,
     description: 'Maintenance schedule deleted successfully.',
   })
-  @ApiScope([ScopeRole.OWNER, ScopeRole.MODERATOR])
+  @ApiScope([ScopeRole.OWNER, ScopeRole.MODERATOR], [Scope.VENUE, 'venueId'])
   async deleteMaintenanceSchedule(
     @CurrentUser() user: Profile,
     @Param('venueId') venueId: string,

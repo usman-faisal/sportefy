@@ -80,19 +80,30 @@ export class ScopeGuard implements CanActivate {
     if (hasDirectPermission) return true;
 
     if (scope === Scope.VENUE) {
-      const facilityIdToCheck =
-        parentId ??
-        (await this.venueRepository.getVenueById(scopeId))?.facilityId;
+      const venue = await this.venueRepository.getVenueById(scopeId);
 
-      if (facilityIdToCheck) {
-        const hasParentPermission = await this.checkUserPermission(
-          user.id,
-          facilityIdToCheck,
-          Scope.FACILITY,
-          requiredRoles,
+      if (!venue) {
+        throw new ForbiddenException(
+          `User does not have the required permissions for scope "${scope}" with ID "${scopeId}".`,
         );
-        if (hasParentPermission) return true;
       }
+    
+      const actualFacilityId = venue.facilityId;
+    
+      if (parentId && parentId !== actualFacilityId) {
+        throw new BadRequestException(
+          `The venue with ID "${scopeId}" does not belong to the facility with ID "${parentId}".`,
+        );
+      }
+    
+      const hasParentPermission = await this.checkUserPermission(
+        user.id,
+        actualFacilityId,
+        Scope.FACILITY,
+        requiredRoles,
+      );
+    
+      if (hasParentPermission) return true;
     }
 
     throw new ForbiddenException(

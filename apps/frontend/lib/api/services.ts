@@ -7,6 +7,7 @@ import {
   Sport,
   Transaction,
   Venue,
+  MaintenanceSchedule,
 } from "@sportefy/db-types";
 import { api, apiPaginated, PaginatedResponse } from "./api";
 import {
@@ -25,6 +26,9 @@ import {
   VerifyPaymentDto,
   PaymentWithUser,
   DashboardReport,
+  MaintenanceScheduleWithRelations,
+  CreateMaintenanceScheduleDto,
+  UpdateMaintenanceScheduleDto,
 } from "./types";
 import { CreateVenueDto, UpdateVenueDto, VenueDetails } from "./types";
 import { Scope, ScopeRole } from "../types";
@@ -381,6 +385,65 @@ export const reportService = {
   getDashboardReports: async (): Promise<DashboardReport | null> => {
     const response = await api<DashboardReport>("/reports/dashboard");
     return response?.data || null;
+  },
+};
+
+export const maintenanceScheduleService = {
+  getMaintenanceSchedules: async (
+    venueId: string
+  ): Promise<MaintenanceScheduleWithRelations[]> => {
+    const response = await api<MaintenanceScheduleWithRelations[]>(
+      `/venues/${venueId}/maintenance-schedules`
+    );
+    return response?.data || [];
+  },
+
+  createMaintenanceSchedule: async (
+    venueId: string,
+    createData: CreateMaintenanceScheduleDto
+  ): Promise<MaintenanceSchedule | null> => {
+    const response = await api<MaintenanceSchedule>(
+      `/venues/${venueId}/maintenance-schedules`,
+      {
+        method: "POST",
+        body: JSON.stringify(createData),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response?.data || null;
+  },
+
+  updateMaintenanceSchedule: async (
+    venueId: string,
+    maintenanceId: string,
+    updateData: UpdateMaintenanceScheduleDto
+  ): Promise<MaintenanceSchedule | null> => {
+    const response = await api<MaintenanceSchedule>(
+      `/venues/${venueId}/maintenance-schedules/${maintenanceId}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(updateData),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response?.data || null;
+  },
+
+  deleteMaintenanceSchedule: async (
+    venueId: string,
+    maintenanceId: string
+  ): Promise<boolean> => {
+    const response = await api<{ message: string }>(
+      `/venues/${venueId}/maintenance-schedules/${maintenanceId}`,
+      {
+        method: "DELETE",
+      }
+    );
+    return response?.success || false;
   },
 };
 

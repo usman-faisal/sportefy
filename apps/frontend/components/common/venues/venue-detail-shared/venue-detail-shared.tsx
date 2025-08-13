@@ -16,7 +16,8 @@ import {
   BarChart3,
   TrendingUp,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Wrench
 } from "lucide-react";
 import Link from "next/link";
 import BookingOverview from "@/components/common/bookings/booking-overview/booking-overview";
@@ -87,6 +88,12 @@ export function VenueDetailShared({
               </div>
             </div>
             <div className="flex gap-2">
+              <Link href={`/dashboard/${userType}/venues/${venue.id}/maintenance`}>
+                <Button variant="outline">
+                  <Wrench className="mr-2 h-4 w-4" />
+                  Maintenance
+                </Button>
+              </Link>
               <Link href={editHref}>
                 <Button>
                   <Edit className="mr-2 h-4 w-4" />
@@ -399,12 +406,20 @@ export function VenueDetailShared({
 
           <div className="space-y-6">
             <Card>
-              <CardTitle>Venue Settings</CardTitle>
+              <CardHeader>
+                <CardTitle>Venue Management</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-muted-foreground">
-                  Manage venue settings and configuration options.
+                  Manage venue settings, maintenance schedules, and configuration options.
                 </p>
                 <div className="flex gap-2">
+                  <Link href={`/dashboard/${userType}/venues/${venue.id}/maintenance`}>
+                    <Button variant="outline">
+                      <Wrench className="mr-2 h-4 w-4" />
+                      Maintenance Schedules
+                    </Button>
+                  </Link>
                   <Link href={editHref}>
                     <Button>
                       <Edit className="mr-2 h-4 w-4" />

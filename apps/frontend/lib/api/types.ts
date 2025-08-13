@@ -11,6 +11,7 @@ import {
   Media,
   Slot,
   Payment,
+  MaintenanceSchedule,
 } from "@sportefy/db-types";
 import { DayOfWeek, MediaType } from "../types";
 
@@ -185,4 +186,28 @@ export interface DashboardReport {
   };
   bookingTrends: BookingTrendPoint[];
   popularTimeSlots: PopularTimeSlot[];
+}
+
+// Maintenance Schedule Types
+export interface MaintenanceScheduleWithRelations extends MaintenanceSchedule {
+  venue?: Venue;
+  scheduledByUser?: Profile;
+  slot?: Slot;
+}
+
+export interface CreateMaintenanceScheduleDto {
+  slot: {
+    startTime: string;
+    endTime: string;
+  };
+  reason?: string;
+  scheduledBy?: string;
+}
+
+export interface UpdateMaintenanceScheduleDto {
+  slot?: {
+    startTime: string;
+    endTime: string;
+  };
+  reason?: string;
 }

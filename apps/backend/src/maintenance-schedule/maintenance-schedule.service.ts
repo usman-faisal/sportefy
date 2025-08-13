@@ -21,6 +21,7 @@ import { SlotEventType } from 'src/common/types';
 import { slots } from '@sportefy/db-types';
 import { SlotService } from 'src/slot/slot.service';
 import { UnitOfWork } from 'src/common/services/unit-of-work.service';
+import { ResponseBuilder } from 'src/common/utils/response-builder';
 
 @Injectable()
 export class MaintenanceScheduleService {
@@ -34,13 +35,17 @@ export class MaintenanceScheduleService {
   ) {}
 
   async getMaintenanceSchedules(venueId: string) {
-    return this.maintenanceScheduleRepository.getMaintenanceSchedule(
+    const maintenanceSchdules = await this.maintenanceScheduleRepository.getManyMaintenanceSchedules(
       eq(maintenanceSchedules.venueId, venueId),
+      {slot:true, scheduledByUser:true}
     );
+
+    return ResponseBuilder.success(maintenanceSchdules);
   }
 
   async createMaintenanceSchedule(
     venueId: string,
+    userId: string,
     createMaintenanceScheduleDto: CreateMaintenanceScheduleDto,
   ) {
     const venue = await this.venueRepository.getVenueById(venueId, {
@@ -62,12 +67,13 @@ export class MaintenanceScheduleService {
       endTimeDate,
     );
 
-    this.unitOfWork.do(async (tx) => {
+    const result = await this.unitOfWork.do(async (tx) => {
       const newMaintenanceSchedule =
         await this.maintenanceScheduleRepository.createMaintenanceSchedule(
           {
             venueId,
             ...createMaintenanceScheduleDto,
+            scheduledBy: userId,
           },
           tx,
         );
@@ -81,7 +87,10 @@ export class MaintenanceScheduleService {
         },
         tx,
       );
+      return newMaintenanceSchedule;
     });
+
+    return ResponseBuilder.success(result, 'Maintenance schedule created successfully');
   }
 
   async updateMaintenanceSchedule(
@@ -119,7 +128,7 @@ export class MaintenanceScheduleService {
     }
     // --- END OF VALIDATION ---
 
-    this.unitOfWork.do(async (tx) => {
+    const result = await this.unitOfWork.do(async (tx) => {
       if (updateDto.slot) {
         await this.slotRepository.updateSlot(
           and(
@@ -137,6 +146,8 @@ export class MaintenanceScheduleService {
         tx,
       );
     });
+
+    return ResponseBuilder.updated(result, 'Maintenance schedule updated successfully');
   }
 
   async deleteMaintenanceSchedule(id: string) {
@@ -147,6 +158,16 @@ export class MaintenanceScheduleService {
       throw new NotFoundException('Maintenance schedule not found');
     }
 
-    return this.maintenanceScheduleRepository.deleteMaintenanceScheduleById(id);
+    await this.unitOfWork.do(async (tx) => {
+      await Promise.all([
+        this.maintenanceScheduleRepository.deleteMaintenanceScheduleById(id, tx),
+        this.slotRepository.deleteSlot(
+          eq(slots.eventId, id),
+          tx,
+        ),
+      ]);
+    });
+
+    return ResponseBuilder.deleted('Maintenance schedule deleted successfully');
   }
 }
