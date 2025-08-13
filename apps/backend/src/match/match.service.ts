@@ -11,6 +11,7 @@ import { and, eq, gte, inArray, lte, or } from 'drizzle-orm';
 import { matches, matchPlayers } from '@sportefy/db-types';
 import { ResponseBuilder } from 'src/common/utils/response-builder';
 import { MatchPlayerRepository } from 'src/match-player/match-player.repository';
+import { MatchPlayerService } from 'src/match-player/match-player.service';
 import { MatchType, PaymentSplitType, SlotEventType } from 'src/common/types';
 import { ProfileRepository } from 'src/profile/profile.repository';
 import { FilterMatchesDto } from './dto/filter-match.dto';
@@ -32,6 +33,7 @@ export class MatchService {
     private readonly matchRepository: MatchRepository,
     private readonly creditService: CreditService,
     private readonly matchPlayerRepository: MatchPlayerRepository,
+    private readonly matchPlayerService: MatchPlayerService,
     private readonly profileRepository: ProfileRepository,
     private readonly unitOfWork: UnitOfWork,
   ) {}
@@ -115,84 +117,25 @@ export class MatchService {
     return ResponseBuilder.updated(updatedMatch, 'Match updated successfully');
   }
 
-  async joinMatch(matchId: string, user: Profile, team: 'A' | 'B') {
-    // Validate the match exists
-    const joinedMatch = await this.unitOfWork.do(async (tx) => {
-      const existingMatch = await this.matchRepository.getMatch(
-        and(eq(matches.id, matchId)),
-        { matchPlayers: true, booking: true },
+  async joinMatch(matchId: string, user: Profile, team?: 'A' | 'B', message?: string) {
+    // For public matches, create a join request instead of directly joining
+    const match = await this.matchRepository.getMatchById(matchId);
+    
+    if (!match) {
+      throw new NotFoundException('Match not found');
+    }
+
+    if (match.matchType === MatchType.PUBLIC) {
+      // Create a join request for public matches
+      return this.matchPlayerService.createJoinRequest(matchId, user, {
+        preferredTeam: team,
+        message,
+      });
+    } else {
+      throw new ForbiddenException(
+        'Cannot directly join private match. Use invite token.',
       );
-
-      if (!existingMatch) {
-        throw new NotFoundException('Match not found');
-      }
-
-      const { booking } = existingMatch;
-
-      // Check if the match is open
-      if (existingMatch.status !== 'open') {
-        throw new ForbiddenException('Match is not open');
-      }
-
-      // Handle different match types
-      if (existingMatch.matchType === MatchType.PRIVATE) {
-        throw new ForbiddenException(
-          'Cannot directly join private match. Use invite token.',
-        );
-      }
-
-      matchValidator.validateUserCanJoinPublicMatch(
-        existingMatch,
-        existingMatch.booking,
-        existingMatch.matchPlayers,
-        user,
-        team,
-      );
-
-      const creditsToCharge = this.creditService.calculatePerPlayerCharge(
-        existingMatch.matchType as MatchType,
-        existingMatch.paymentSplitType as PaymentSplitType,
-        booking.totalCredits,
-        existingMatch.playerLimit,
-        false, // The user is joining, not creating
-      );
-
-      matchValidator.assertUserHasEnoughCredits(user, creditsToCharge);
-
-      const newMatchPlayer = await this.matchPlayerRepository.createMatchPlayer(
-        {
-          matchId: existingMatch.id,
-          userId: user.id,
-          team,
-        },
-        tx,
-      );
-
-      if (
-        matchValidator.isMatchNowFull(
-          [...existingMatch.matchPlayers, newMatchPlayer],
-          existingMatch.playerLimit,
-        )
-      ) {
-        await this.matchRepository.updateMatchById(existingMatch.id, {
-          status: 'full',
-        });
-      }
-      if (creditsToCharge > 0) {
-        await this.profileRepository.updateProfileCreditsById(
-          user.id,
-          -creditsToCharge,
-          tx,
-        );
-      }
-
-      return newMatchPlayer;
-    });
-
-    return ResponseBuilder.created(
-      joinedMatch,
-      'Successfully joined the match',
-    );
+    }
   }
 
   async joinMatchUsingInviteToken(user: Profile, inviteToken: string) {

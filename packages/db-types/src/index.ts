@@ -11,6 +11,7 @@ export * from "./maintenance-schedules.schema";
 export * from "./slots.schema";
 export * from "./matches.schema";
 export * from "./match-players.schema";
+export * from "./match-join-requests.schema";
 export * from "./payments.schema";
 export * from "./transactions.schema";
 export * from "./venue-sports.schema";
@@ -31,6 +32,7 @@ export type {
 export type { Slot, NewSlot } from "./slots.schema";
 export type { Match, NewMatch } from "./matches.schema";
 export type { MatchPlayer, NewMatchPlayer } from "./match-players.schema";
+export type { MatchJoinRequest, NewMatchJoinRequest } from "./match-join-requests.schema";
 export type { Payment, NewPayment } from "./payments.schema";
 export type { Transaction, NewTransaction } from "./transactions.schema";
 export type { VenueSport, NewVenueSport } from "./venue-sports.schema";

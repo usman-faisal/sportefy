@@ -14,7 +14,7 @@ import { CreditModule } from 'src/credit/credit.module';
   imports: [
     VenueModule,
     OperatingHourModule,
-    MatchPlayerModule,
+    forwardRef(() => MatchPlayerModule),
     ProfileModule,
     forwardRef(() => BookingModule),
     CreditModule,
