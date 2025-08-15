@@ -19,6 +19,7 @@ import { updateVenue } from "@/lib/actions/venue-actions";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { VenueDetails } from "@/lib/api/types";
 import { MediaUploader } from "@/components/common/media/media-uploader";
+import { LocationMap } from "@/components/common/venues/location-map";
 
 const venueEditSchema = z.object({
   name: z.string().min(1, "Venue name is required"),
@@ -41,6 +42,8 @@ const venueEditSchema = z.object({
       type: z.string().min(1, "Media type is required"),
     })
   ).optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
 type VenueEditFormData = z.infer<typeof venueEditSchema>;
@@ -80,6 +83,8 @@ export function VenueEditForm({ venue, sports, initialOperatingHours, initialMed
           url: m.mediaLink ?? "",
           type: m.mediaType ?? MediaType.IMAGE,
         })) || [],
+      latitude: venue.latitude || undefined,
+      longitude: venue.longitude || undefined,
     },
   });
 
@@ -108,12 +113,19 @@ export function VenueEditForm({ venue, sports, initialOperatingHours, initialMed
         url: m.url, 
         type: m.type 
       })) || [],
+      latitude: data.latitude,
+      longitude: data.longitude,
     };
     
     const result = await updateVenue(venue.facilityId, venue.id, payload);
     if (result?.error) {
       setError(result.error);
     }
+  };
+
+  const handleLocationSelect = (lat: number, lng: number) => {
+    form.setValue('latitude', lat);
+    form.setValue('longitude', lng);
   };
 
   const sportOptions = sports.map(sport => ({
@@ -355,6 +367,20 @@ export function VenueEditForm({ venue, sports, initialOperatingHours, initialMed
                   </Button>
                 </div>
               ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Location</CardTitle>
+              <CardDescription>Update the location for this venue.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <LocationMap
+                initialLat={form.watch('latitude')}
+                initialLng={form.watch('longitude')}
+                onLocationSelect={handleLocationSelect}
+              />
             </CardContent>
           </Card>
 

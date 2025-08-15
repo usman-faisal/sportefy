@@ -26,6 +26,8 @@ type VenueFormData = {
     url: string;
     type: string;
   }>;
+  latitude?: number;
+  longitude?: number;
 };
 
 export async function createVenue(facilityId: string, data: VenueFormData) {
@@ -37,6 +39,8 @@ export async function createVenue(facilityId: string, data: VenueFormData) {
         mediaLink: m.url,
         mediaType: m.type as MediaType,
       })) || [],
+      latitude: data.latitude,
+      longitude: data.longitude,
     };
 
     const newVenue = await venueService.createVenue(facilityId, createPayload);
@@ -62,6 +66,8 @@ export async function updateVenue(facilityId: string, venueId: string, data: Ven
       basePrice: data.basePrice,
       capacity: data.capacity,
       availability: data.availability,
+      latitude: data.latitude,
+      longitude: data.longitude,
     };
 
     const venueUpdatePromise = venueService.updateVenue(facilityId, venueId, updatePayload);

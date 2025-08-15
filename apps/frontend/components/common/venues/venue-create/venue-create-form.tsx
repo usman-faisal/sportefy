@@ -19,6 +19,7 @@ import { createVenue } from "@/lib/actions/venue-actions";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { FacilitySearch } from "@/components/common/venues/facility-search";
 import { MediaUploader } from "@/components/common/media/media-uploader";
+import { LocationMap } from "@/components/common/venues/location-map";
 
 const venueSchema = z.object({
   name: z.string().min(1, "Venue name is required"),
@@ -39,6 +40,8 @@ const venueSchema = z.object({
       type: z.string().min(1, "Media type is required"),
     })
   ).optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
 type VenueFormData = z.infer<typeof venueSchema>;
@@ -62,6 +65,8 @@ export function VenueCreateForm({ sports }: VenueCreateFormProps) {
       sportIds: [],
       operatingHours: [{ dayOfWeek: DayOfWeek.MONDAY, openTime: "09:00", closeTime: "17:00" }],
       media: [],
+      latitude: undefined,
+      longitude: undefined,
     },
   });
 
@@ -92,6 +97,11 @@ export function VenueCreateForm({ sports }: VenueCreateFormProps) {
     if (result?.error) {
       setError(result.error);
     }
+  };
+
+  const handleLocationSelect = (lat: number, lng: number) => {
+    form.setValue('latitude', lat);
+    form.setValue('longitude', lng);
   };
 
   const sportOptions = sports.map(sport => ({
@@ -193,6 +203,11 @@ export function VenueCreateForm({ sports }: VenueCreateFormProps) {
               )} />
             </CardContent>
           </Card>
+          
+          <LocationMap
+            onLocationSelect={handleLocationSelect}
+            className="w-full"
+          />
           
           <Card>
             <CardHeader>

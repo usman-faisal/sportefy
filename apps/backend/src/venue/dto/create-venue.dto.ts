@@ -107,4 +107,24 @@ export class CreateVenueDto implements CreateVenueDtoValues {
   @ValidateNested({ each: true })
   @Type(() => CreateMediaDto)
   media: CreateMediaDto[];
+
+  @ApiProperty({
+    description: 'Latitude coordinate of the venue location',
+    example: 40.7128,
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsNumber()
+  latitude?: number | null;
+
+  @ApiProperty({
+    description: 'Longitude coordinate of the venue location',
+    example: -74.0060,
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsNumber()
+  longitude?: number | null;
 }

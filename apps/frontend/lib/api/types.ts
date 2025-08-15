@@ -138,6 +138,8 @@ export interface CreateVenueDto {
   availability?: 'active' | 'inactive' | 'maintenance';
   operatingHours: CreateOperatingHourDto[];
   media: CreateMediaDto[];
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface UpdateVenueDto {
@@ -146,6 +148,8 @@ export interface UpdateVenueDto {
   basePrice?: number;
   capacity?: number;
   availability?: 'active' | 'inactive' | 'maintenance';
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface VenueDetails extends Venue {

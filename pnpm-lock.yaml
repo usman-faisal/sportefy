@@ -283,6 +283,9 @@ importers:
       react-hook-form:
         specifier: ^7.61.1
         version: 7.61.1(react@19.1.0)
+      react-leaflet:
+        specifier: ^5.0.0
+        version: 5.0.0(leaflet@1.9.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       recharts:
         specifier: ^3.1.2
         version: 3.1.2(@types/react@19.1.0)(react-dom@19.1.0(react@19.1.0))(react-is@18.3.1)(react@19.1.0)(redux@5.0.1)
@@ -2076,6 +2079,13 @@ packages:
 
   '@radix-ui/rect@1.1.1':
     resolution: {integrity: sha512-HPwpGIzkl28mWyZqG52jiqDJ12waP11Pa1lGoiyUkIEuMLBP0oeK/C89esbXrxsky5we7dfd8U58nm0SgAWpVw==}
+
+  '@react-leaflet/core@3.0.0':
+    resolution: {integrity: sha512-3EWmekh4Nz+pGcr+xjf0KNyYfC3U2JjnkWsh0zcqaexYqmmB5ZhH37kz41JXGmKzpaMZCnPofBBm64i+YrEvGQ==}
+    peerDependencies:
+      leaflet: ^1.9.0
+      react: ^19.0.0
+      react-dom: ^19.0.0
 
   '@reduxjs/toolkit@2.8.2':
     resolution: {integrity: sha512-MYlOhQ0sLdw4ud48FoC5w0dH9VfWQjtCjreKwYTT3l+r427qYC5Y8PihNutepr8XrNaBUDQo9khWUwQxZaqt5A==}
@@ -4409,6 +4419,9 @@ packages:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
     engines: {node: '>=6'}
 
+  leaflet@1.9.4:
+    resolution: {integrity: sha512-nxS1ynzJOmOlHp+iL3FyWqK89GtNL8U8rvlMOsQdTTssxZwCXh8N2NB3GDQOL+YR3XnWyZAxwQixURb+FA74PA==}
+
   leven@3.1.0:
     resolution: {integrity: sha512-qsda+H8jTaUaN/x5vzW2rzc+8Rw4TAQ/4KjB46IwK5VH+IlVeeeje/EoZRpiXvIqjFgK84QffqPztGI3VBLG1A==}
     engines: {node: '>=6'}
@@ -5017,6 +5030,13 @@ packages:
 
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
+
+  react-leaflet@5.0.0:
+    resolution: {integrity: sha512-CWbTpr5vcHw5bt9i4zSlPEVQdTVcML390TjeDG0cK59z1ylexpqC6M1PJFjV8jD7CF+ACBFsLIDs6DRMoLEofw==}
+    peerDependencies:
+      leaflet: ^1.9.0
+      react: ^19.0.0
+      react-dom: ^19.0.0
 
   react-redux@9.2.0:
     resolution: {integrity: sha512-ROY9fvHhwOD9ySfrF0wmvu//bKCQ6AeZZq1nJNtbDC+kk5DuSuNX/n6YWYF/SYy7bSba4D4FSz8DJeKY/S/r+g==}
@@ -7528,6 +7548,12 @@ snapshots:
       '@types/react-dom': 19.1.1(@types/react@19.1.0)
 
   '@radix-ui/rect@1.1.1': {}
+
+  '@react-leaflet/core@3.0.0(leaflet@1.9.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      leaflet: 1.9.4
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
 
   '@reduxjs/toolkit@2.8.2(react-redux@9.2.0(@types/react@19.1.0)(react@19.1.0)(redux@5.0.1))(react@19.1.0)':
     dependencies:
@@ -10285,6 +10311,8 @@ snapshots:
 
   kleur@3.0.3: {}
 
+  leaflet@1.9.4: {}
+
   leven@3.1.0: {}
 
   levn@0.4.1:
@@ -10805,6 +10833,13 @@ snapshots:
   react-is@16.13.1: {}
 
   react-is@18.3.1: {}
+
+  react-leaflet@5.0.0(leaflet@1.9.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      '@react-leaflet/core': 3.0.0(leaflet@1.9.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      leaflet: 1.9.4
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
 
   react-redux@9.2.0(@types/react@19.1.0)(react@19.1.0)(redux@5.0.1):
     dependencies:
