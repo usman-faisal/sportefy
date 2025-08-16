@@ -447,4 +447,16 @@ export const maintenanceScheduleService = {
   },
 };
 
+export const checkInService = {
+  getCheckInCount: async (venueId: string): Promise<{ venueId: string; count: number } | null> => {
+    const response = await api<{ venueId: string; count: number }>(`/venues/${venueId}/check-ins/count`);
+    return response?.data || null;
+  },
+
+  getCheckInsByVenue: async (venueId: string): Promise<any[]> => {
+    const response = await api<any[]>(`/venues/${venueId}/check-ins`);
+    return response?.data || [];
+  },
+};
+
 

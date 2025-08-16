@@ -3,8 +3,8 @@ import {
   DRIZZLE_CLIENT,
   DrizzleClient,
 } from 'src/common/providers/drizzle.provider';
-import { NewCheckIn, CheckIn, checkIns } from '@sportefy/db-types';
-import { SQL, count, eq } from 'drizzle-orm';
+import { NewCheckIn, CheckIn, checkIns, profiles } from '@sportefy/db-types';
+import { SQL, count, eq, and, isNull, desc } from 'drizzle-orm';
 import { DrizzleTransaction } from 'src/database/types';
 import { BaseRepository } from 'src/common/base.repository';
 import { IncludeRelation, InferResultType } from 'src/database/utils';
@@ -165,5 +165,49 @@ export class CheckInRepository extends BaseRepository {
 
     const [totalResult] = await query;
     return totalResult.count;
+  }
+
+  /**
+   * Gets the count of active check-ins for a venue (check-ins without checkout time).
+   */
+  async getActiveCheckInCountForVenue(
+    venueId: string,
+    tx?: DrizzleTransaction,
+  ): Promise<number> {
+    const dbClient = tx || this.db;
+    const [result] = await dbClient
+      .select({ count: count() })
+      .from(checkIns)
+      .where(
+        and(
+          eq(checkIns.venueId, venueId),
+          isNull(checkIns.checkOutTime),
+        ),
+      );
+
+    return result.count;
+  }
+
+  /**
+   * Gets all check-ins for a venue with user information.
+   */
+  async getCheckInsByVenue(
+    venueId: string,
+    tx?: DrizzleTransaction,
+  ): Promise<any[]> {
+    const dbClient = tx || this.db;
+    const checkInsList = await dbClient.query.checkIns.findMany({
+      where: eq(checkIns.venueId, venueId),
+      with: {
+        user: {
+          with: {
+            profile: true,
+          },
+        },
+      },
+      orderBy: desc(checkIns.checkInTime),
+    });
+
+    return checkInsList;
   }
 }
