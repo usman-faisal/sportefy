@@ -6,7 +6,7 @@ import { MatchPlayerModule } from 'src/match-player/match-player.module';
 import { MatchModule } from 'src/match/match.module';
 import { CheckInService } from './check-in.service';
 import { CheckInRepository } from './check-in.repository';
-import { CheckInController } from './check-in.controller';
+import { CheckInController, VenueCheckInController } from './check-in.controller';
 import { ProfileModule } from 'src/profile/profile.module';
 import { VenueSportModule } from 'src/venue-sport/venue-sport.module';
 
@@ -27,6 +27,6 @@ import { VenueSportModule } from 'src/venue-sport/venue-sport.module';
   ],
   providers: [CheckInService, CheckInRepository],
   exports: [CheckInService, CheckInRepository],
-  controllers: [CheckInController],
+  controllers: [CheckInController, VenueCheckInController],
 })
 export class CheckInModule {}

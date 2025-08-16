@@ -15,6 +15,7 @@ import {
   ScanLine,
   MapPin,
   ChevronDown,
+  CheckCircle,
 } from "lucide-react";
 import {
   Sidebar,
@@ -203,6 +204,10 @@ export function AppSidebar({
   const pathname = usePathname();
   const scopeGroups = groupScopesByEntity(userScopes);
 
+  // Extract venueId from pathname if on a venue page
+  const venueMatch = pathname.match(/\/venues\/([a-f0-9-]+)/);
+  const currentVenueId = venueMatch ? venueMatch[1] : null;
+
   const handleSignOut = async () => {
     await signOut();
   };
@@ -305,6 +310,24 @@ export function AppSidebar({
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationLinks.map(renderNavigationItem)}
+              
+              {/* Add Check-ins link when on a venue page */}
+              {currentVenueId && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={pathname.includes(`/venues/${currentVenueId}/check-ins`)}
+                  >
+                    <Link 
+                      href={`/dashboard/${userRole}/venues/${currentVenueId}/check-ins`} 
+                      className="flex items-center gap-3"
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                      <span>Venue Check-ins</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
