@@ -9,6 +9,8 @@ import { CheckInRepository } from './check-in.repository';
 import { CheckInController } from './check-in.controller';
 import { ProfileModule } from 'src/profile/profile.module';
 import { VenueSportModule } from 'src/venue-sport/venue-sport.module';
+import { UserScopeModule } from 'src/user-scope/user-scope.module';
+import { VenueModule } from 'src/venue/venue.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { VenueSportModule } from 'src/venue-sport/venue-sport.module';
       }),
       inject: [ConfigService],
     }),
+    UserScopeModule,
+    VenueModule,
     BookingModule,
     MatchPlayerModule,
     MatchModule,

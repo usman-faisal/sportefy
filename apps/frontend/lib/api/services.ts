@@ -29,6 +29,8 @@ import {
   MaintenanceScheduleWithRelations,
   CreateMaintenanceScheduleDto,
   UpdateMaintenanceScheduleDto,
+  CheckInWithRelations,
+  VenueCheckInCount,
 } from "./types";
 import { CreateVenueDto, UpdateVenueDto, VenueDetails } from "./types";
 import { Scope, ScopeRole } from "../types";
@@ -444,6 +446,18 @@ export const maintenanceScheduleService = {
       }
     );
     return response?.success || false;
+  },
+};
+
+export const checkInService = {
+  getVenueCheckInCount: async (venueId: string): Promise<VenueCheckInCount | null> => {
+    const response = await api<VenueCheckInCount>(`/check-in/venues/${venueId}/count`);
+    return response?.data || null;
+  },
+
+  getVenueCheckIns: async (venueId: string): Promise<CheckInWithRelations[] | null> => {
+    const response = await api<CheckInWithRelations[]>(`/check-in/venues/${venueId}`);
+    return response?.data || null;
   },
 };
 

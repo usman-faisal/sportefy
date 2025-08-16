@@ -4,7 +4,7 @@ import {
   DrizzleClient,
 } from 'src/common/providers/drizzle.provider';
 import { NewCheckIn, CheckIn, checkIns } from '@sportefy/db-types';
-import { SQL, count, eq } from 'drizzle-orm';
+import { SQL, count, eq, and, isNull } from 'drizzle-orm';
 import { DrizzleTransaction } from 'src/database/types';
 import { BaseRepository } from 'src/common/base.repository';
 import { IncludeRelation, InferResultType } from 'src/database/utils';
@@ -165,5 +165,26 @@ export class CheckInRepository extends BaseRepository {
 
     const [totalResult] = await query;
     return totalResult.count;
+  }
+
+  /**
+   * Gets the count of active check-ins for a venue (checked in but not checked out).
+   */
+  async getActiveCheckInCount(
+    venueId: string,
+    tx?: DrizzleTransaction,
+  ): Promise<number> {
+    const dbClient = tx || this.db;
+    const [result] = await dbClient
+      .select({ count: count() })
+      .from(checkIns)
+      .where(
+        and(
+          eq(checkIns.venueId, venueId),
+          isNull(checkIns.checkOutTime)
+        )
+      );
+
+    return result.count;
   }
 }

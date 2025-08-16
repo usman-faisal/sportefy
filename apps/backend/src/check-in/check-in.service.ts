@@ -284,4 +284,26 @@ export class CheckInService {
 
     return ResponseBuilder.success(userCheckIns);
   }
+
+  async getVenueCheckInCount(venueId: string) {
+    const activeCheckInCount = await this.checkInRepository.getActiveCheckInCount(venueId);
+    
+    return ResponseBuilder.success({
+      venueId,
+      activeCheckIns: activeCheckInCount,
+    });
+  }
+
+  async getVenueCheckIns(venueId: string) {
+    const venueCheckIns = await this.checkInRepository.getManyCheckIns(
+      eq(checkIns.venueId, venueId),
+      {
+        user: true,
+        venue: true,
+        booking: true,
+      },
+    );
+
+    return ResponseBuilder.success(venueCheckIns);
+  }
 }

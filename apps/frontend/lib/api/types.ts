@@ -215,3 +215,19 @@ export interface UpdateMaintenanceScheduleDto {
   };
   reason?: string;
 }
+export interface CheckInWithRelations {
+  id: string;
+  userId: string;
+  venueId: string;
+  bookingId?: string;
+  checkInTime: Date;
+  checkOutTime?: Date;
+  user: Profile;
+  venue: Venue;
+  booking?: Booking;
+}
+
+export interface VenueCheckInCount {
+  venueId: string;
+  activeCheckIns: number;
+}

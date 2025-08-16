@@ -2,7 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { venueService } from "@/lib/api/services";
 import { VenueDetailShared } from "@/components/common/venues/venue-detail-shared";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { isGym } from "@/lib/utils/venue-utils";
 
 interface VenueDetailPageProps {
   params: Promise<{ venueId: string }>;
@@ -16,6 +17,11 @@ export default async function VenueDetailPage({
 
   if (!venue) {
     notFound();
+  }
+
+  // Redirect to gym page if this venue is a gym
+  if (isGym(venue)) {
+    redirect(`/dashboard/admin/venues/${venue.id}/gym`);
   }
 
   return (

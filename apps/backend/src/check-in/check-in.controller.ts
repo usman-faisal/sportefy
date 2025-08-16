@@ -1,13 +1,15 @@
-import { Controller, Post, Body, UseGuards, Req, Get } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, Get, Param, ParseUUIDPipe } from '@nestjs/common';
 import { CheckInService } from './check-in.service';
 import { CheckInDto } from './dto/check-in.dto';
 import { WalkInCheckInDto } from './dto/walk-in-check-in.dto'; // Import new DTO
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { authSchema, Profile } from '@sportefy/db-types';
 import { Auth } from 'src/common/decorators/auth.decorator';
-import { UserRole } from 'src/common/types';
-import { ApiBody, ApiOperation } from '@nestjs/swagger';
+import { ScopeRole, UserRole } from 'src/common/types';
+import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { WalkInCheckOutDto } from './dto/walk-in-check-out.dto';
+import { ApiScope } from 'src/common/decorators/scope.decorator';
+import { Scope } from 'src/common/types';
 
 @Controller('check-in')
 export class CheckInController {
@@ -44,5 +46,23 @@ export class CheckInController {
   @ApiOperation({ summary: 'Get user check-ins' })
   getUserCheckIns(@CurrentUser() user: Profile) {
     return this.checkInService.getUserCheckIns(user.id);
+  }
+
+  @Auth(UserRole.ADMIN, UserRole.USER)
+  @ApiScope([ScopeRole.MODERATOR, ScopeRole.OWNER], [Scope.VENUE, 'venueId'])
+  @Get('venues/:venueId/count')
+  @ApiOperation({ summary: 'Get current check-in count for a venue' })
+  @ApiParam({ name: 'venueId', type: String, description: 'The ID of the venue' })
+  getVenueCheckInCount(@Param('venueId', ParseUUIDPipe) venueId: string) {
+    return this.checkInService.getVenueCheckInCount(venueId);
+  }
+
+  @Auth(UserRole.ADMIN, UserRole.USER)
+  @ApiScope([ScopeRole.MODERATOR, ScopeRole.OWNER], [Scope.VENUE, 'venueId'])
+  @Get('venues/:venueId')
+  @ApiOperation({ summary: 'Get all check-ins for a venue' })
+  @ApiParam({ name: 'venueId', type: String, description: 'The ID of the venue' })
+  getVenueCheckIns(@Param('venueId', ParseUUIDPipe) venueId: string) {
+    return this.checkInService.getVenueCheckIns(venueId);
   }
 }

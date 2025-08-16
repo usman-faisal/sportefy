@@ -1,18 +1,18 @@
 export const dynamic = "force-dynamic";
 
-import { profileService, venueService } from "@/lib/api/services";
+import { profileService, venueService, checkInService } from "@/lib/api/services";
 import { PermissionChecker } from "@/lib/utils/permissions";
 import { redirect, notFound } from "next/navigation";
-import { VenueDetailShared } from "@/components/common/venues/venue-detail-shared";
 import { isGym } from "@/lib/utils/venue-utils";
+import { GymDetailShared } from "@/components/common/venues/gym-detail-shared";
 
-interface VenueDetailPageProps {
+interface GymDetailPageProps {
   params: Promise<{ venueId: string }>;
 }
 
-export default async function VenueDetailPage({
+export default async function GymDetailPage({
   params,
-}: VenueDetailPageProps) {
+}: GymDetailPageProps) {
   const { venueId } = await params;
 
   const profile = await profileService.getProfileWithScopes();
@@ -32,16 +32,20 @@ export default async function VenueDetailPage({
       notFound();
     }
 
-    // Redirect to gym page if this venue is a gym
-    if (isGym(venue)) {
-      redirect(`/dashboard/staff/venues/${venue.id}/gym`);
+    // Redirect to regular venue page if this is not a gym
+    if (!isGym(venue)) {
+      redirect(`/dashboard/staff/venues/${venue.id}`);
     }
 
+    const checkInCount = await checkInService.getVenueCheckInCount(venue.id);
+
     return (
-      <VenueDetailShared
+      <GymDetailShared
         venue={venue}
+        checkInCount={checkInCount?.activeCheckIns || 0}
         backHref="/dashboard/staff/venues"
         editHref={`/dashboard/staff/venues/${venue.id}/edit`}
+        checkInsHref={`/dashboard/staff/venues/${venue.id}/check-ins`}
         showDeleteButton={false}
         userType="staff"
       />
@@ -52,10 +56,10 @@ export default async function VenueDetailPage({
         <div className="max-w-7xl mx-auto">
           <div className="border-destructive border rounded-lg p-6 text-center">
             <h2 className="text-xl font-semibold text-destructive mb-2">
-              Error Loading Venue
+              Error Loading Gym
             </h2>
             <p className="text-muted-foreground">
-              Failed to load venue data. Please try refreshing the page.
+              Failed to load gym data. Please try refreshing the page.
             </p>
           </div>
         </div>

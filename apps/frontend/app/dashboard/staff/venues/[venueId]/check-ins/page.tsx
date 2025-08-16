@@ -1,18 +1,17 @@
 export const dynamic = "force-dynamic";
 
-import { profileService, venueService } from "@/lib/api/services";
+import { profileService, venueService, checkInService } from "@/lib/api/services";
 import { PermissionChecker } from "@/lib/utils/permissions";
 import { redirect, notFound } from "next/navigation";
-import { VenueDetailShared } from "@/components/common/venues/venue-detail-shared";
-import { isGym } from "@/lib/utils/venue-utils";
+import { CheckInsListShared } from "@/components/common/venues/check-ins-list-shared";
 
-interface VenueDetailPageProps {
+interface CheckInsListPageProps {
   params: Promise<{ venueId: string }>;
 }
 
-export default async function VenueDetailPage({
+export default async function CheckInsListPage({
   params,
-}: VenueDetailPageProps) {
+}: CheckInsListPageProps) {
   const { venueId } = await params;
 
   const profile = await profileService.getProfileWithScopes();
@@ -32,17 +31,13 @@ export default async function VenueDetailPage({
       notFound();
     }
 
-    // Redirect to gym page if this venue is a gym
-    if (isGym(venue)) {
-      redirect(`/dashboard/staff/venues/${venue.id}/gym`);
-    }
+    const checkIns = await checkInService.getVenueCheckIns(venue.id);
 
     return (
-      <VenueDetailShared
+      <CheckInsListShared
         venue={venue}
-        backHref="/dashboard/staff/venues"
-        editHref={`/dashboard/staff/venues/${venue.id}/edit`}
-        showDeleteButton={false}
+        checkIns={checkIns || []}
+        backHref={`/dashboard/staff/venues/${venue.id}`}
         userType="staff"
       />
     );
@@ -52,10 +47,10 @@ export default async function VenueDetailPage({
         <div className="max-w-7xl mx-auto">
           <div className="border-destructive border rounded-lg p-6 text-center">
             <h2 className="text-xl font-semibold text-destructive mb-2">
-              Error Loading Venue
+              Error Loading Check-ins
             </h2>
             <p className="text-muted-foreground">
-              Failed to load venue data. Please try refreshing the page.
+              Failed to load check-in data. Please try refreshing the page.
             </p>
           </div>
         </div>

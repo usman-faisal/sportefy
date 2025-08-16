@@ -17,7 +17,8 @@ import {
   TrendingUp,
   CheckCircle,
   AlertCircle,
-  Wrench
+  Wrench,
+  UserCheck
 } from "lucide-react";
 import Link from "next/link";
 import BookingOverview from "@/components/common/bookings/booking-overview/booking-overview";
@@ -88,6 +89,12 @@ export function VenueDetailShared({
               </div>
             </div>
             <div className="flex gap-2">
+              <Link href={`/dashboard/${userType}/venues/${venue.id}/check-ins`}>
+                <Button variant="outline">
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  View Check-ins
+                </Button>
+              </Link>
               <Link href={`/dashboard/${userType}/venues/${venue.id}/maintenance`}>
                 <Button variant="outline">
                   <Wrench className="mr-2 h-4 w-4" />
@@ -414,6 +421,12 @@ export function VenueDetailShared({
                   Manage venue settings, maintenance schedules, and configuration options.
                 </p>
                 <div className="flex gap-2">
+                  <Link href={`/dashboard/${userType}/venues/${venue.id}/check-ins`}>
+                    <Button variant="outline">
+                      <UserCheck className="mr-2 h-4 w-4" />
+                      View Check-ins
+                    </Button>
+                  </Link>
                   <Link href={`/dashboard/${userType}/venues/${venue.id}/maintenance`}>
                     <Button variant="outline">
                       <Wrench className="mr-2 h-4 w-4" />

@@ -4,5 +4,6 @@
       "mode": "auto"
     }
   ],
-  "eslint.enable": false
+  "eslint.enable": false,
+  "kiroAgent.configureMCP": "Disabled"
 }
