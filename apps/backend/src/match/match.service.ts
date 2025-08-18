@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { MatchRepository } from './match.repository';
 import { UpdateMatchDto } from './dto/update-match.dto';
-import { Profile, slots, users, venueSports } from '@sportefy/db-types';
+import { Profile, profiles, slots, users, venueSports } from '@sportefy/db-types';
 import { and, eq, gte, inArray, lte, or } from 'drizzle-orm';
 import { matches, matchPlayers } from '@sportefy/db-types';
 import { ResponseBuilder } from 'src/common/utils/response-builder';
@@ -26,6 +26,7 @@ import {
 
 import { UnitOfWork } from 'src/common/services/unit-of-work.service';
 import { GetMatchesDto } from './dto/get-matches.dto';
+import { profile } from 'console';
 
 @Injectable()
 export class MatchService {
@@ -344,7 +345,10 @@ export class MatchService {
         venue: venues,
         sport: sports,
         slot: slots,
-        matchPlayers: matchPlayers
+        matchPlayers: {
+          ...matchPlayers,
+          user: profiles
+        },
       })
       .from(matches)
       .leftJoin(bookings, eq(matches.bookingId, bookings.id))
@@ -355,6 +359,7 @@ export class MatchService {
         eq(slots.eventType, SlotEventType.BOOKING)
       ))
       .leftJoin(matchPlayers, eq(matches.id, matchPlayers.matchId))
+      .leftJoin(profiles, eq(matchPlayers.userId, profiles.id))
       .where(and(...conditions));
 
     const filteredMatches = await query;

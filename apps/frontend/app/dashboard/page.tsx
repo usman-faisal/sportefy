@@ -12,14 +12,12 @@ export default async function DashboardPage() {
   }
 
   const permissions = new PermissionChecker(profile);
-  
+
   if (permissions.canAccessAdminDashboard()) {
     redirect("/dashboard/admin");
   }
-  
+
   if (permissions.canAccessStaffDashboard()) {
     redirect("/dashboard/staff");
   }
-  
-  redirect("/unauthorized");
-}   
+}

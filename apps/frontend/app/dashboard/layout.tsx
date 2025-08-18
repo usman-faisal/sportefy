@@ -15,7 +15,7 @@ export default async function DashboardLayout({
   const profile = await profileService.getProfileWithScopes();
   
   if (!profile) {
-    redirect("/auth/login");
+    redirect("/unauthorized");
   }
 
   const permissions = new PermissionChecker(profile);
