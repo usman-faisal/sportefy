@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { MatchJoinRequestRepository } from './match-join-request.repository';
-import { MatchPlayerRepository } from './match-player.repository';
+import { MatchPlayerRepository } from '../match-player/match-player.repository';
 import { MatchRepository } from 'src/match/match.repository';
 import { ProfileRepository } from 'src/profile/profile.repository';
 import { CreditService } from 'src/credit/credit.service';
@@ -23,7 +23,7 @@ import {
 } from 'src/booking/utils/booking.validation';
 
 @Injectable()
-export class MatchPlayerService {
+export class MatchJoinRequestService {
   constructor(
     private readonly matchJoinRequestRepository: MatchJoinRequestRepository,
     private readonly matchPlayerRepository: MatchPlayerRepository,

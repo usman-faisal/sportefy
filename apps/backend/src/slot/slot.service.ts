@@ -14,7 +14,7 @@ import { toZonedTime, fromZonedTime, format } from 'date-fns-tz';
 import { ResponseBuilder } from 'src/common/utils/response-builder';
 import { SlotRepository } from './slot.repository';
 import { endOfDay } from 'date-fns/endOfDay';
-import { isBefore, parseISO, startOfDay } from 'date-fns';
+import { isBefore, parseISO, startOfDay, parse, addDays } from 'date-fns';
 import { GetVenueSlotsQuery } from './dto/get-venue-slots.dto';
 
 export interface ValidateTimeSlotOptions {
@@ -79,23 +79,34 @@ export class SlotService {
     venue: Venue & { operatingHours: OperatingHour[] },
   ) {
     const zonedStartTime = toZonedTime(startTime, this.TIMEZONE_PAKISTAN);
-    const dayOfWeek = format(zonedStartTime, 'EEEE') as DayOfWeek; // E.g., "Monday"
+    const zonedEndTime = toZonedTime(endTime, this.TIMEZONE_PAKISTAN);
+    
+    const startDayOfWeek = format(zonedStartTime, 'EEEE') as DayOfWeek;
+    const endDayOfWeek = format(zonedEndTime, 'EEEE') as DayOfWeek;
+    
+    const spansMultipleDays = startDayOfWeek !== endDayOfWeek;
+    
+    if (spansMultipleDays) {
+      throw new BadRequestException(
+        'Bookings cannot span across multiple days. Please book separate slots for each day.'
+      );
+    }
 
     let relevantHourIntervals =
-      venue.operatingHours?.filter((oh) => oh.dayOfWeek === dayOfWeek) ?? [];
+      venue.operatingHours?.filter((oh) => oh.dayOfWeek === startDayOfWeek) ?? [];
 
     if (relevantHourIntervals.length === 0 && venue.facilityId) {
       relevantHourIntervals =
         await this.operatingHourRepository.getManyOperatingHours(
           and(
             eq(operatingHours.facilityId, venue.facilityId),
-            eq(operatingHours.dayOfWeek, dayOfWeek),
+            eq(operatingHours.dayOfWeek, startDayOfWeek),
           ),
         );
     }
 
     if (relevantHourIntervals.length === 0) {
-      throw new BadRequestException(`The venue is closed on ${dayOfWeek}s.`);
+      throw new BadRequestException(`The venue is closed on ${startDayOfWeek}s.`);
     }
 
     const isWithinOperatingHours = relevantHourIntervals.some((interval) => {
@@ -103,18 +114,32 @@ export class SlotService {
         return false;
       }
 
-      const operatingOpenTimeStr = `${format(zonedStartTime, 'yyyy-MM-dd')} ${interval.openTime}`;
-      const operatingCloseTimeStr = `${format(zonedStartTime, 'yyyy-MM-dd')} ${interval.closeTime}`;
-
-      const operatingOpenUTC = fromZonedTime(
-        operatingOpenTimeStr,
-        this.TIMEZONE_PAKISTAN,
+      const openTimeParts = interval.openTime.split(':');
+      const closeTimeParts = interval.closeTime.split(':');
+      
+      const operatingOpenDate = new Date(zonedStartTime);
+      operatingOpenDate.setHours(
+        parseInt(openTimeParts[0], 10),
+        parseInt(openTimeParts[1], 10),
+        parseInt(openTimeParts[2] || '0', 10),
+        0
       );
-      const operatingCloseUTC = fromZonedTime(
-        operatingCloseTimeStr,
-        this.TIMEZONE_PAKISTAN,
+      
+      const operatingCloseDate = new Date(zonedStartTime);
+      operatingCloseDate.setHours(
+        parseInt(closeTimeParts[0], 10),
+        parseInt(closeTimeParts[1], 10),
+        parseInt(closeTimeParts[2] || '0', 10),
+        0
       );
-
+      
+      if (operatingCloseDate <= operatingOpenDate) {
+        operatingCloseDate.setDate(operatingCloseDate.getDate() + 1);
+      }
+      
+      const operatingOpenUTC = fromZonedTime(operatingOpenDate, this.TIMEZONE_PAKISTAN);
+      const operatingCloseUTC = fromZonedTime(operatingCloseDate, this.TIMEZONE_PAKISTAN);
+      
       return (
         startTime.getTime() >= operatingOpenUTC.getTime() &&
         endTime.getTime() <= operatingCloseUTC.getTime()
@@ -122,8 +147,14 @@ export class SlotService {
     });
 
     if (!isWithinOperatingHours) {
+      const hoursInfo = relevantHourIntervals
+        .map(h => `${h.openTime} - ${h.closeTime}`)
+        .join(', ');
+      
       throw new BadRequestException(
-        `The requested time is outside of the venue's operating hours for ${dayOfWeek}.`,
+        `The requested time is outside of the venue's operating hours for ${startDayOfWeek}. ` +
+        `Operating hours: ${hoursInfo}. ` +
+        `Your booking: ${format(zonedStartTime, 'HH:mm')} - ${format(zonedEndTime, 'HH:mm')} PKT.`
       );
     }
   }
@@ -159,7 +190,6 @@ export class SlotService {
   async getVenueSlotsByDateOrRange(venueId: string, query: GetVenueSlotsQuery) {
     const { date, startDate, endDate } = query;
     let conditions: any;
-
 
     if (date) {
       const dayStart = startOfDay(parseISO(date));

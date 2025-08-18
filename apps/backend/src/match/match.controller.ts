@@ -1,51 +1,44 @@
 import {
-  BadRequestException,
-  Body,
   Controller,
-  Delete,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Patch,
   Post,
+  Get,
   Put,
+  Delete,
+  Param,
+  Body,
   Query,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { MatchService } from './match.service';
-import { Auth } from 'src/common/decorators/auth.decorator';
-import { UserRole } from 'src/common/types';
-import {
-  ApiBody,
-  ApiExtraModels,
-  ApiOperation,
-  ApiParam,
-  ApiQuery,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { Auth } from 'src/common/decorators/auth.decorator';
 import { Profile } from '@sportefy/db-types';
-import { UpdateMatchDto, UpdateMatchDtoSwagger } from './dto/update-match.dto';
+import { UserRole } from 'src/common/types';
+import { UpdateMatchDto } from './dto/update-match.dto';
 import { FilterMatchesDto } from './dto/filter-match.dto';
-import { Public } from 'src/common/decorators/public.decorator';
 import { GetMatchesDto } from './dto/get-matches.dto';
 
-@ApiTags('matches')
+@ApiTags('Matches')
 @Controller('matches')
+@Auth(UserRole.USER, UserRole.ADMIN)
 export class MatchController {
   constructor(private readonly matchService: MatchService) {}
 
-  @Public()
-  @ApiOperation({ summary: 'Filter and retrieve public matches' })
-  @ApiExtraModels(FilterMatchesDto)
-  @Get('filter')
-  async getFilteredMatches(@Query() filters: FilterMatchesDto) {
-    return this.matchService.getFilteredMatches(filters);
+  @Get(':id')
+  @ApiOperation({ summary: 'Get match details' })
+  @ApiParam({ name: 'id', description: 'Match ID' })
+  @ApiResponse({ status: 200, description: 'Match details retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Match not found' })
+  async getMatchDetails(
+    @Param('id') matchId: string,
+    @CurrentUser() user: Profile,
+  ) {
+    return this.matchService.getMatchDetails(user, matchId);
   }
 
-  @Auth(UserRole.ADMIN, UserRole.USER)
-  @ApiOperation({ summary: 'Get matches for the current user' })
-  @Get()
+  @Get('user/my-matches')
+  @ApiOperation({ summary: 'Get user matches' })
+  @ApiResponse({ status: 200, description: 'User matches retrieved successfully' })
   async getUserMatches(
     @CurrentUser() user: Profile,
     @Query() getMatchesDto: GetMatchesDto,
@@ -53,144 +46,123 @@ export class MatchController {
     return this.matchService.getUserMatches(user, getMatchesDto);
   }
 
-  @Auth(UserRole.ADMIN, UserRole.USER)
-  @ApiOperation({ summary: 'Get details for a specific match' })
-  @Get(':matchId')
-  @ApiParam({
-    name: 'matchId',
-    type: String,
-    description: 'The ID of the match to retrieve',
-  })
-  async getMatchDetails(
-    @CurrentUser() user: Profile,
-    @Param('matchId') matchId: string,
-  ) {
-    return this.matchService.getMatchDetails(user, matchId);
-  }
-
-  @Auth(UserRole.ADMIN, UserRole.USER)
+  @Put(':id')
   @ApiOperation({ summary: 'Update match details' })
-  @Patch(':matchId')
-  @ApiParam({
-    name: 'matchId',
-    type: String,
-    description: 'The ID of the match to update',
-  })
-  @ApiBody({ type: UpdateMatchDtoSwagger })
+  @ApiParam({ name: 'id', description: 'Match ID' })
+  @ApiResponse({ status: 200, description: 'Match updated successfully' })
+  @ApiResponse({ status: 404, description: 'Match not found' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not the match owner' })
   async updateMatch(
-    @Param('matchId', ParseUUIDPipe) matchId: string,
+    @Param('id') matchId: string,
     @CurrentUser() user: Profile,
     @Body() updateMatchDto: UpdateMatchDto,
   ) {
     return this.matchService.updateMatch(matchId, user, updateMatchDto);
   }
 
-  @Auth(UserRole.ADMIN, UserRole.USER)
-  @ApiOperation({ summary: 'Join a match using match ID or invite token' })
-  @Post(':matchId/join')
-  @ApiParam({
-    name: 'matchId',
-    type: String,
-    description: 'The ID of the match to join',
+  @Post(':id/join')
+  @ApiOperation({ 
+    summary: 'Join a match',
+    description: 'For public matches, creates a join request. For private matches, use the match code endpoint instead.'
   })
-  @ApiQuery({
-    name: 'team',
-    required: false,
-    enum: ['A', 'B'],
-    description:
-      'The team to join (A or B). Not required if using an invite token.',
+  @ApiParam({ name: 'id', description: 'Match ID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        team: { type: 'string', enum: ['A', 'B'], description: 'Preferred team (optional)' },
+        message: { type: 'string', description: 'Optional message for join request' }
+      }
+    }
   })
-  @ApiQuery({
-    name: 'inviteToken',
-    required: false,
-    type: String,
-    description:
-      'An invite token for a private match. If provided, the team parameter is ignored.',
-  })
+  @ApiResponse({ status: 201, description: 'Join request created successfully (for public matches)' })
+  @ApiResponse({ status: 403, description: 'Cannot directly join private match' })
+  @ApiResponse({ status: 404, description: 'Match not found' })
   async joinMatch(
-    @Param('matchId', ParseUUIDPipe) matchId: string,
+    @Param('id') matchId: string,
     @CurrentUser() user: Profile,
-    @Query('team') team?: 'A' | 'B',
-    @Query('inviteToken') inviteToken?: string,
+    @Body() body: { team?: 'A' | 'B', message?: string } = {},
   ) {
-    if (inviteToken) {
-      return this.matchService.joinMatchUsingInviteToken(user, inviteToken);
-    }
-
-    if (!team) {
-      throw new BadRequestException(
-        'A team must be provided to join a public match.',
-      );
-    }
-
-    return this.matchService.joinMatch(matchId, user, team);
+    return this.matchService.joinMatch(matchId, user, body.team, body.message);
   }
 
-  @Auth(UserRole.ADMIN, UserRole.USER)
-  @ApiOperation({
-    summary: 'Leave a match',
-    description:
-      'Allows an authenticated user to leave a match they have previously joined. The user cannot be the original creator of the booking.',
+  @Post('join-with-code')
+  @ApiOperation({ 
+    summary: 'Join a private match using match code',
+    description: 'Use this endpoint to join private matches by providing the 6-character match code'
   })
-  @ApiParam({
-    name: 'matchId',
-    type: String,
-    description: 'The ID of the match to leave',
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        matchCode: { 
+          type: 'string', 
+          description: 'The 6-character match code (e.g., "ABC123" or "ABC-123")',
+          example: 'ABC123'
+        }
+      },
+      required: ['matchCode']
+    }
   })
-  @ApiResponse({ status: 200, description: 'Successfully left the match.' })
-  @ApiResponse({
-    status: 403,
-    description:
-      'Forbidden. The user owns the booking and cannot leave, or the match is not in a valid state to be left.',
+  @ApiResponse({ status: 201, description: 'Successfully joined the match' })
+  @ApiResponse({ status: 400, description: 'Invalid match code or insufficient credits' })
+  @ApiResponse({ status: 404, description: 'Match not found with this code' })
+  @ApiResponse({ status: 403, description: 'Match is not open or user cannot join' })
+  async joinMatchWithCode(
+    @CurrentUser() user: Profile,
+    @Body() body: { matchCode: string },
+  ) {
+    return this.matchService.joinMatchUsingCode(user, body.matchCode);
+  }
+
+  @Post(':id/regenerate-code')
+  @ApiOperation({ 
+    summary: 'Regenerate match code',
+    description: 'Generate a new match code for a private match. Only the match creator can do this.'
   })
-  @ApiResponse({
-    status: 404,
-    description: 'Not Found. The match does not exist.',
-  })
-  @Delete(':matchId/leave')
+  @ApiParam({ name: 'id', description: 'Match ID' })
+  @ApiResponse({ status: 200, description: 'Match code regenerated successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not the match owner' })
+  @ApiResponse({ status: 404, description: 'Match not found' })
+  async regenerateMatchCode(
+    @Param('id') matchId: string,
+    @CurrentUser() user: Profile,
+  ) {
+    return this.matchService.regenerateMatchCode(user, matchId);
+  }
+
+  @Delete(':id/leave')
+  @ApiOperation({ summary: 'Leave a match' })
+  @ApiParam({ name: 'id', description: 'Match ID' })
+  @ApiResponse({ status: 200, description: 'Successfully left the match' })
+  @ApiResponse({ status: 403, description: 'Cannot leave - you are the match owner' })
+  @ApiResponse({ status: 404, description: 'Match not found' })
   async leaveMatch(
-    @Param('matchId', ParseUUIDPipe) matchId: string,
+    @Param('id') matchId: string,
     @CurrentUser() user: Profile,
   ) {
     return this.matchService.leaveMatch(user, matchId);
   }
 
-  @Auth(UserRole.ADMIN, UserRole.USER)
-  @ApiOperation({
-    summary: 'Kick a player from a match',
-    description:
-      'Allows the user who created the booking to kick another player from the match.',
-  })
-  @ApiParam({
-    name: 'matchId',
-    type: String,
-    description: 'The ID of the match.',
-  })
-  @ApiParam({
-    name: 'userId',
-    type: String,
-    description: 'The ID of the user to be kicked from the match.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Player successfully kicked from the match.',
-  })
-  @ApiResponse({
-    status: 403,
-    description:
-      'Forbidden. The requesting user is not the creator of the booking.',
-  })
-  @ApiResponse({
-    status: 404,
-    description:
-      'Not Found. The match or the user to be kicked does not exist.',
-  })
   @Delete(':matchId/kick/:userId')
+  @ApiOperation({ summary: 'Kick a player from match' })
+  @ApiParam({ name: 'matchId', description: 'Match ID' })
+  @ApiParam({ name: 'userId', description: 'User ID to kick' })
+  @ApiResponse({ status: 200, description: 'User kicked successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not the match owner' })
+  @ApiResponse({ status: 404, description: 'Match or user not found' })
   async kickPlayer(
-    @Param('matchId', ParseUUIDPipe) matchId: string,
-    @Param('userId', ParseUUIDPipe) userIdToKick: string,
+    @Param('matchId') matchId: string,
+    @Param('userId') userId: string,
     @CurrentUser() user: Profile,
   ) {
-    return this.matchService.kickPlayer(matchId, userIdToKick, user);
+    return this.matchService.kickPlayer(matchId, userId, user);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Get filtered matches' })
+  @ApiResponse({ status: 200, description: 'Matches retrieved successfully' })
+  async getFilteredMatches(@Query() filters: FilterMatchesDto) {
+    return this.matchService.getFilteredMatches(filters);
   }
 }

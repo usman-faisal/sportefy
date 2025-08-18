@@ -71,7 +71,7 @@ export const matches = pgTable("matches", {
   paymentSplitType:
     paymentSplitTypeEnum("payment_split_type").default("split_evenly"),
 
-  inviteToken: uuid("invite_token").unique().defaultRandom(),
+  matchCode: varchar("match_code", { length: 6 }).unique().notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 

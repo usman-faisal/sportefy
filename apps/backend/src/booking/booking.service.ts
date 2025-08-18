@@ -48,6 +48,7 @@ import { GetBookingsDto } from './dto/get-bookings.dto';
 import { VenueSportRepository } from 'src/venue-sport/venue-sport.repository';
 import { SearchBookingsQuery } from './dto/search-bookings.query';
 import { SQL } from 'drizzle-orm';
+import { MatchCodeGenerator } from 'src/match/utils/match-code.generator';
 
 @Injectable()
 export class BookingService {
@@ -176,6 +177,10 @@ export class BookingService {
         },
         tx,
       );
+
+      // Generate unique match code
+      const matchCode = await this.generateUniqueMatchCode(tx);
+
       const [_, newMatch] = await Promise.all([
         // create slot
         this.slotRepository.createSlot(
@@ -189,7 +194,7 @@ export class BookingService {
           tx,
         ),
 
-        // create match
+        // create match with generated match code
         this.matchRepository.createMatch(
           {
             bookingId: newBooking.id,
@@ -205,6 +210,7 @@ export class BookingService {
             paymentSplitType: match.paymentSplitType,
             status: 'open',
             sportId: createBookingDto.sportId,
+            matchCode: matchCode, // Add the generated match code
           },
           tx,
         ),
@@ -251,7 +257,49 @@ export class BookingService {
       return [newBooking, newMatch];
     });
 
-    return ResponseBuilder.created(result, 'Booking created successfully');
+    // Format the response to include formatted match code for display
+    const [booking, createdMatch] = result;
+    const formattedResult = [
+      booking,
+      {
+        ...createdMatch,
+        formattedMatchCode: MatchCodeGenerator.formatForDisplay((createdMatch as Match).matchCode),
+      }
+    ];
+
+    return ResponseBuilder.created(formattedResult, 'Booking created successfully');
+  }
+
+  /**
+   * Generates a unique match code, ensuring no collision with existing codes
+   * @param tx Database transaction
+   * @returns Unique match code
+   */
+  private async generateUniqueMatchCode(tx?: any): Promise<string> {
+    let matchCode: string;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    do {
+      matchCode = MatchCodeGenerator.generateMatchCode();
+      attempts++;
+
+      const existingMatch = await this.matchRepository.getMatch(
+        eq(matches.matchCode, matchCode),
+        undefined,
+        tx,
+      );
+
+      if (!existingMatch) {
+        break;
+      }
+
+      if (attempts >= maxAttempts) {
+        throw new BadRequestException('Unable to generate unique match code. Please try again.');
+      }
+    } while (attempts < maxAttempts);
+
+    return matchCode;
   }
 
   async updateBooking(

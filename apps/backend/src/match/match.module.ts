@@ -9,16 +9,18 @@ import { MatchPlayerModule } from 'src/match-player/match-player.module';
 import { ProfileModule } from 'src/profile/profile.module';
 import { BookingModule } from 'src/booking/booking.module';
 import { CreditModule } from 'src/credit/credit.module';
+import { MatchJoinRequestModule } from 'src/match-join-request/match-join-request.module';
 
 @Module({
   imports: [
     VenueModule,
     OperatingHourModule,
-    forwardRef(() => MatchPlayerModule),
+    MatchPlayerModule,
     ProfileModule,
     forwardRef(() => BookingModule),
     CreditModule,
     SlotModule,
+    MatchJoinRequestModule
   ],
   providers: [MatchService, MatchRepository],
   exports: [MatchRepository],

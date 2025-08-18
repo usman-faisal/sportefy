@@ -11,7 +11,6 @@ import { and, eq, gte, inArray, lte, or } from 'drizzle-orm';
 import { matches, matchPlayers } from '@sportefy/db-types';
 import { ResponseBuilder } from 'src/common/utils/response-builder';
 import { MatchPlayerRepository } from 'src/match-player/match-player.repository';
-import { MatchPlayerService } from 'src/match-player/match-player.service';
 import { MatchType, PaymentSplitType, SlotEventType } from 'src/common/types';
 import { ProfileRepository } from 'src/profile/profile.repository';
 import { FilterMatchesDto } from './dto/filter-match.dto';
@@ -23,10 +22,10 @@ import {
   assertUserDoesntOwnTheBooking,
   assertUserOwnsTheBooking,
 } from 'src/booking/utils/booking.validation';
-
 import { UnitOfWork } from 'src/common/services/unit-of-work.service';
 import { GetMatchesDto } from './dto/get-matches.dto';
-import { profile } from 'console';
+import { MatchCodeGenerator } from './utils/match-code.generator';
+import { MatchJoinRequestService } from 'src/match-join-request/match-join-request.service';
 
 @Injectable()
 export class MatchService {
@@ -34,7 +33,7 @@ export class MatchService {
     private readonly matchRepository: MatchRepository,
     private readonly creditService: CreditService,
     private readonly matchPlayerRepository: MatchPlayerRepository,
-    private readonly matchPlayerService: MatchPlayerService,
+    private readonly matchJoinRequestService: MatchJoinRequestService,
     private readonly profileRepository: ProfileRepository,
     private readonly unitOfWork: UnitOfWork,
   ) {}
@@ -86,6 +85,7 @@ export class MatchService {
       hasPrev,
     });
   }
+
   async updateMatch(
     matchId: string,
     user: Profile,
@@ -128,25 +128,35 @@ export class MatchService {
 
     if (match.matchType === MatchType.PUBLIC) {
       // Create a join request for public matches
-      return this.matchPlayerService.createJoinRequest(matchId, user, {
+      return this.matchJoinRequestService.createJoinRequest(matchId, user, {
         preferredTeam: team,
         message,
       });
     } else {
       throw new ForbiddenException(
-        'Cannot directly join private match. Use invite token.',
+        'Cannot directly join private match. Use match code.',
       );
     }
   }
 
-  async joinMatchUsingInviteToken(user: Profile, inviteToken: string) {
+  /**
+   * Join a private match using a match code
+   */
+  async joinMatchUsingCode(user: Profile, matchCode: string) {
+    // Clean and validate the match code
+    const cleanCode = MatchCodeGenerator.cleanCode(matchCode);
+    
+    if (!MatchCodeGenerator.isValidMatchCode(cleanCode)) {
+      throw new BadRequestException('Invalid match code format');
+    }
+
     const match = await this.matchRepository.getMatch(
-      eq(matches.inviteToken, inviteToken),
+      eq(matches.matchCode, cleanCode),
       { booking: true, matchPlayers: true },
     );
 
     if (!match || !match.booking) {
-      throw new NotFoundException('Private match not found.');
+      throw new NotFoundException('Match not found with this code.');
     }
 
     if (match.status !== 'open' || match.booking.status === 'cancelled') {
@@ -207,6 +217,58 @@ export class MatchService {
     return ResponseBuilder.created(
       joinedMatch,
       'Successfully joined the match',
+    );
+  }
+
+  /**
+   * Generate a new match code for a match (useful if the current one needs to be changed)
+   */
+  async regenerateMatchCode(user: Profile, matchId: string) {
+    const match = await this.matchRepository.getMatch(
+      eq(matches.id, matchId),
+      { booking: true },
+    );
+
+    if (!match || !match.booking) {
+      throw new NotFoundException('Match not found');
+    }
+
+    // Only the match creator can regenerate the code
+    assertUserOwnsTheBooking(user, match.booking);
+
+    let newCode: string;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    // Generate a unique code (retry if collision occurs)
+    do {
+      newCode = MatchCodeGenerator.generateMatchCode();
+      attempts++;
+
+      // Check if code already exists
+      const existingMatch = await this.matchRepository.getMatch(
+        eq(matches.matchCode, newCode),
+      );
+
+      if (!existingMatch) {
+        break; // Code is unique
+      }
+
+      if (attempts >= maxAttempts) {
+        throw new BadRequestException('Unable to generate unique match code. Please try again.');
+      }
+    } while (attempts < maxAttempts);
+
+    const updatedMatch = await this.matchRepository.updateMatchById(matchId, {
+      matchCode: newCode,
+    });
+
+    return ResponseBuilder.updated(
+      {
+        ...updatedMatch,
+        formattedMatchCode: MatchCodeGenerator.formatForDisplay(newCode),
+      },
+      'Match code regenerated successfully',
     );
   }
 

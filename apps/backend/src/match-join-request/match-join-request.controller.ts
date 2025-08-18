@@ -9,19 +9,19 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { MatchPlayerService } from './match-player.service';
 import { CreateJoinRequestDto } from './dto/create-join-request.dto';
 import { ReviewJoinRequestDto } from './dto/review-join-request.dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { Auth } from 'src/common/decorators/auth.decorator';
 import { Profile } from '@sportefy/db-types';
 import { UserRole } from 'src/common/types';
+import { MatchJoinRequestService } from './match-join-request.service';
 
 @ApiTags('Match Join Requests')
-@Controller('match-player')
+@Controller()
 @Auth(UserRole.USER, UserRole.ADMIN)
-export class MatchPlayerController {
-  constructor(private readonly matchPlayerService: MatchPlayerService) {}
+export class MatchJoinRequestController {
+  constructor(private readonly matchJoinRequestService: MatchJoinRequestService) {}
 
   @Post('join-request/:matchId')
   @ApiOperation({ summary: 'Create a join request for a match' })
@@ -33,7 +33,7 @@ export class MatchPlayerController {
     @CurrentUser() user: Profile,
     @Body() createJoinRequestDto: CreateJoinRequestDto,
   ) {
-    return this.matchPlayerService.createJoinRequest(
+    return this.matchJoinRequestService.createJoinRequest(
       matchId,
       user,
       createJoinRequestDto,
@@ -51,7 +51,7 @@ export class MatchPlayerController {
     @CurrentUser() user: Profile,
     @Body() reviewDto: ReviewJoinRequestDto,
   ) {
-    return this.matchPlayerService.reviewJoinRequest(requestId, user, reviewDto);
+    return this.matchJoinRequestService.reviewJoinRequest(requestId, user, reviewDto);
   }
 
   @Get('join-request/match/:matchId')
@@ -63,7 +63,7 @@ export class MatchPlayerController {
     @Param('matchId') matchId: string,
     @CurrentUser() user: Profile,
   ) {
-    return this.matchPlayerService.getMatchJoinRequests(matchId, user);
+    return this.matchJoinRequestService.getMatchJoinRequests(matchId, user);
   }
 
   @Get('join-request/my-requests')
@@ -74,7 +74,7 @@ export class MatchPlayerController {
     @Query('limit') limit?: number,
     @Query('offset') offset?: number,
   ) {
-    return this.matchPlayerService.getUserJoinRequests(user, limit, offset);
+    return this.matchJoinRequestService.getUserJoinRequests(user, limit, offset);
   }
 
   @Delete('join-request/:requestId')
@@ -87,6 +87,6 @@ export class MatchPlayerController {
     @Param('requestId') requestId: string,
     @CurrentUser() user: Profile,
   ) {
-    return this.matchPlayerService.cancelJoinRequest(requestId, user);
+    return this.matchJoinRequestService.cancelJoinRequest(requestId, user);
   }
 }

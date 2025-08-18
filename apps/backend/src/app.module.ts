@@ -32,6 +32,7 @@ import { VenueSportModule } from './venue-sport/venue-sport.module';
 import { CheckInModule } from './check-in/check-in.module';
 import { ReviewModule } from './review/review.module';
 import { PaymentGatewayModule } from './payment-gateway/payment-gateway.module';
+import { MatchJoinRequestModule } from './match-join-request/match-join-request.module';
 
 @Module({
   imports: [
@@ -65,7 +66,8 @@ import { PaymentGatewayModule } from './payment-gateway/payment-gateway.module';
     CheckInModule,
     ReviewModule,
     SportModule,
-    PaymentGatewayModule
+    PaymentGatewayModule,
+    MatchJoinRequestModule
   ],
   controllers: [AppController],
   providers: [
