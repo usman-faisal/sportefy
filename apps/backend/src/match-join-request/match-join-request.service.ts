@@ -21,6 +21,7 @@ import {
   assertUserOwnsTheBooking,
   assertBookingStatusIs,
 } from 'src/booking/utils/booking.validation';
+import { BookingRepository } from 'src/booking/booking.repository';
 
 @Injectable()
 export class MatchJoinRequestService {
@@ -63,13 +64,16 @@ export class MatchJoinRequestService {
     assertBookingStatusIs(match.booking, 'pending');
 
     // Check if user already has a pending request
-    const existingRequest = await this.matchJoinRequestRepository.getUserPendingRequestForMatch(
-      matchId,
-      user.id,
-    );
+    const existingRequest =
+      await this.matchJoinRequestRepository.getUserPendingRequestForMatch(
+        matchId,
+        user.id,
+      );
 
     if (existingRequest) {
-      throw new BadRequestException('You already have a pending request for this match');
+      throw new BadRequestException(
+        'You already have a pending request for this match',
+      );
     }
 
     // Check if user is already in the match
@@ -94,14 +98,18 @@ export class MatchJoinRequestService {
     }
 
     // Create the join request
-    const joinRequest = await this.matchJoinRequestRepository.createMatchJoinRequest({
-      matchId,
-      requesterId: user.id,
-      preferredTeam: createJoinRequestDto.preferredTeam,
-      message: createJoinRequestDto.message,
-    });
+    const joinRequest =
+      await this.matchJoinRequestRepository.createMatchJoinRequest({
+        matchId,
+        requesterId: user.id,
+        preferredTeam: createJoinRequestDto.preferredTeam,
+        message: createJoinRequestDto.message,
+      });
 
-    return ResponseBuilder.created(joinRequest, 'Join request created successfully');
+    return ResponseBuilder.created(
+      joinRequest,
+      'Join request created successfully',
+    );
   }
 
   async reviewJoinRequest(
@@ -109,9 +117,8 @@ export class MatchJoinRequestService {
     user: Profile,
     reviewDto: ReviewJoinRequestDto,
   ) {
-    const joinRequest = await this.matchJoinRequestRepository.getMatchJoinRequestById(
-      requestId,
-    );
+    const joinRequest =
+      await this.matchJoinRequestRepository.getMatchJoinRequestById(requestId);
 
     if (!joinRequest) {
       throw new NotFoundException('Join request not found');
@@ -145,15 +152,16 @@ export class MatchJoinRequestService {
 
     const result = await this.unitOfWork.do(async (tx) => {
       // Update the request status
-      const [updatedRequest] = await this.matchJoinRequestRepository.updateMatchJoinRequestById(
-        requestId,
-        {
-          status: reviewDto.decision,
-          reviewedBy: user.id,
-          reviewedAt: new Date(),
-        },
-        tx,
-      );
+      const [updatedRequest] =
+        await this.matchJoinRequestRepository.updateMatchJoinRequestById(
+          requestId,
+          {
+            status: reviewDto.decision,
+            reviewedBy: user.id,
+            reviewedAt: new Date(),
+          },
+          tx,
+        );
 
       if (reviewDto.decision === 'approved') {
         // If approved, add the user to the match
@@ -166,24 +174,31 @@ export class MatchJoinRequestService {
         );
 
         // Check if requester has enough credits
-        if (!requesterProfile.credits || requesterProfile.credits < creditsToCharge) {
-          throw new BadRequestException('Requester does not have enough credits to join this match');
+        if (
+          !requesterProfile.credits ||
+          requesterProfile.credits < creditsToCharge
+        ) {
+          throw new BadRequestException(
+            'Requester does not have enough credits to join this match',
+          );
         }
 
         // Determine team assignment
-        const assignedTeam = reviewDto.assignedTeam || 
-          joinRequest.preferredTeam || 
+        const assignedTeam =
+          reviewDto.assignedTeam ||
+          joinRequest.preferredTeam ||
           matchValidator.findTeamToJoin(match.matchPlayers);
 
         // Create match player
-        const newMatchPlayer = await this.matchPlayerRepository.createMatchPlayer(
-          {
-            matchId: joinRequest.matchId,
-            userId: joinRequest.requesterId,
-            team: assignedTeam,
-          },
-          tx,
-        );
+        const newMatchPlayer =
+          await this.matchPlayerRepository.createMatchPlayer(
+            {
+              matchId: joinRequest.matchId,
+              userId: joinRequest.requesterId,
+              team: assignedTeam,
+            },
+            tx,
+          );
 
         // Charge credits
         if (creditsToCharge > 0) {
@@ -196,7 +211,9 @@ export class MatchJoinRequestService {
 
         // Check if match is now full
         const updatedMatchPlayers = [...match.matchPlayers, newMatchPlayer];
-        if (matchValidator.isMatchNowFull(updatedMatchPlayers, match.playerLimit)) {
+        if (
+          matchValidator.isMatchNowFull(updatedMatchPlayers, match.playerLimit)
+        ) {
           await this.matchRepository.updateMatchById(
             joinRequest.matchId,
             { status: 'full' },
@@ -210,9 +227,10 @@ export class MatchJoinRequestService {
       return { updatedRequest };
     });
 
-    const message = reviewDto.decision === 'approved' 
-      ? 'Join request approved and user added to match'
-      : 'Join request rejected';
+    const message =
+      reviewDto.decision === 'approved'
+        ? 'Join request approved and user added to match'
+        : 'Join request rejected';
 
     return ResponseBuilder.success(result, message);
   }
@@ -229,11 +247,13 @@ export class MatchJoinRequestService {
     // Only booking owner can view join requests
     assertUserOwnsTheBooking(user, match.booking);
 
-    const requests = await this.matchJoinRequestRepository.getRequestsByMatch(
-      matchId,
-    );
+    const requests =
+      await this.matchJoinRequestRepository.getRequestsByMatch(matchId);
 
-    return ResponseBuilder.success(requests, 'Join requests retrieved successfully');
+    return ResponseBuilder.success(
+      requests,
+      'Join requests retrieved successfully',
+    );
   }
 
   async getUserJoinRequests(user: Profile, limit?: number, offset?: number) {
@@ -244,20 +264,24 @@ export class MatchJoinRequestService {
       offset,
     );
 
-    return ResponseBuilder.success(requests, 'User join requests retrieved successfully');
+    return ResponseBuilder.success(
+      requests,
+      'User join requests retrieved successfully',
+    );
   }
 
   async cancelJoinRequest(requestId: string, user: Profile) {
-    const joinRequest = await this.matchJoinRequestRepository.getMatchJoinRequestById(
-      requestId,
-    );
+    const joinRequest =
+      await this.matchJoinRequestRepository.getMatchJoinRequestById(requestId);
 
     if (!joinRequest) {
       throw new NotFoundException('Join request not found');
     }
 
     if (joinRequest.requesterId !== user.id) {
-      throw new ForbiddenException('You can only cancel your own join requests');
+      throw new ForbiddenException(
+        'You can only cancel your own join requests',
+      );
     }
 
     if (joinRequest.status !== 'pending') {

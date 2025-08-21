@@ -4,7 +4,7 @@ import {
   DrizzleClient,
 } from 'src/common/providers/drizzle.provider';
 import { NewSlot, Slot, slots } from '@sportefy/db-types';
-import { SQL, count, eq } from 'drizzle-orm';
+import { SQL, and, count, eq, sql } from 'drizzle-orm';
 import { DrizzleTransaction } from 'src/database/types';
 import { BaseRepository } from 'src/common/base.repository';
 import { IncludeRelation, InferResultType } from 'src/database/utils';
@@ -22,7 +22,7 @@ export type SlotsOrderByInput = NonNullable<
 
 @Injectable()
 export class SlotRepository extends BaseRepository {
-  constructor(@Inject(DRIZZLE_CLIENT) protected readonly db: DrizzleClient) {
+  constructor(@Inject(DRIZZLE_CLIENT) readonly db: DrizzleClient) {
     super(db);
   }
 
@@ -159,5 +159,31 @@ export class SlotRepository extends BaseRepository {
     });
 
     return eventSlots;
+  }
+  async getOverlappingSlots(
+    venueId: string,
+    startTime: Date,
+    endTime: Date,
+    eventType?: 'booking' | 'maintenance',
+    relations?: any,
+    tx?: DrizzleTransaction,
+  ): Promise<InferResultType<'slots', any>[]> {
+    const conditions: any[] = [
+      eq(slots.venueId, venueId),
+      sql`${slots.startTime} < ${endTime} AND ${slots.endTime} > ${startTime}`,
+    ];
+
+    if (eventType) {
+      conditions.push(eq(slots.eventType, eventType));
+    }
+
+    return await this.getManySlots(
+      and(...conditions),
+      relations,
+      undefined,
+      undefined,
+      undefined,
+      tx,
+    );
   }
 }

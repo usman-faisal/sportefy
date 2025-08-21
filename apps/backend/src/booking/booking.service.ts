@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -23,7 +22,17 @@ import {
   PaginatedResult,
 } from 'src/common/types';
 import { ProfileRepository } from 'src/profile/profile.repository';
-import { and, eq, gt, gte, exists, ConsoleLogWriter, inArray } from 'drizzle-orm';
+import {
+  and,
+  eq,
+  gt,
+  gte,
+  exists,
+  ConsoleLogWriter,
+  inArray,
+  ne,
+  lt,
+} from 'drizzle-orm';
 import {
   bookings,
   matches,
@@ -49,6 +58,7 @@ import { VenueSportRepository } from 'src/venue-sport/venue-sport.repository';
 import { SearchBookingsQuery } from './dto/search-bookings.query';
 import { SQL } from 'drizzle-orm';
 import { MatchCodeGenerator } from 'src/match/utils/match-code.generator';
+import { DrizzleTransaction } from 'src/database/types';
 
 @Injectable()
 export class BookingService {
@@ -77,7 +87,10 @@ export class BookingService {
       throw new NotFoundException('Booking not found');
     }
 
-    bookingValidator.assertUserOwnsTheBooking(user, booking as unknown as Booking)
+    bookingValidator.assertUserOwnsTheBooking(
+      user,
+      booking as unknown as Booking,
+    );
 
     return ResponseBuilder.success(booking);
   }
@@ -154,6 +167,8 @@ export class BookingService {
       venueId,
       slot.startTime,
       slot.endTime,
+      {},
+      user.id,
     );
 
     // Calculate credits to charge using the extracted function
@@ -263,11 +278,16 @@ export class BookingService {
       booking,
       {
         ...createdMatch,
-        formattedMatchCode: MatchCodeGenerator.formatForDisplay((createdMatch as Match).matchCode),
-      }
+        formattedMatchCode: MatchCodeGenerator.formatForDisplay(
+          (createdMatch as Match).matchCode,
+        ),
+      },
     ];
 
-    return ResponseBuilder.created(formattedResult, 'Booking created successfully');
+    return ResponseBuilder.created(
+      formattedResult,
+      'Booking created successfully',
+    );
   }
 
   /**
@@ -295,7 +315,9 @@ export class BookingService {
       }
 
       if (attempts >= maxAttempts) {
-        throw new BadRequestException('Unable to generate unique match code. Please try again.');
+        throw new BadRequestException(
+          'Unable to generate unique match code. Please try again.',
+        );
       }
     } while (attempts < maxAttempts);
 
@@ -332,13 +354,21 @@ export class BookingService {
     bookingValidator.validateConfirmableBooking(booking, user);
 
     const result = await this.unitOfWork.do(async (tx) => {
-      return await this.bookingRepository.updateBookingById(
+      const confirmedBooking = await this.bookingRepository.updateBookingById(
         booking.id,
         {
           status: BookingStatus.CONFIRMED,
         },
         tx,
       );
+
+      await this.cancelConflictingPendingBookings(
+        booking.id,
+        booking.venueId,
+        tx,
+      );
+
+      return confirmedBooking;
     });
 
     return result;
@@ -419,8 +449,9 @@ export class BookingService {
     return ResponseBuilder.success(null, 'Booking cancelled successfully.');
   }
 
-
-  async getAllBookings(searchQuery: SearchBookingsQuery): Promise<PaginatedResult<Booking>> {
+  async getAllBookings(
+    searchQuery: SearchBookingsQuery,
+  ): Promise<PaginatedResult<Booking>> {
     const { limit, offset, page, ...otherSearchQuery } = searchQuery;
     const whereConditions = this.buildWhereConditions(otherSearchQuery);
 
@@ -525,8 +556,11 @@ export class BookingService {
    */
   async getBookingStats() {
     const stats = await this.bookingRepository.getBookingStats();
-    
-    return ResponseBuilder.success(stats, 'Booking statistics retrieved successfully');
+
+    return ResponseBuilder.success(
+      stats,
+      'Booking statistics retrieved successfully',
+    );
   }
 
   /**
@@ -535,11 +569,17 @@ export class BookingService {
    * @param userScopes User's scope information
    * @returns Paginated bookings result
    */
-  async getStaffBookings(searchQuery: SearchBookingsQuery, userScopes: any[]): Promise<PaginatedResult<Booking>> {
+  async getStaffBookings(
+    searchQuery: SearchBookingsQuery,
+    userScopes: any[],
+  ): Promise<PaginatedResult<Booking>> {
     const { limit, offset, page, ...otherSearchQuery } = searchQuery;
-    
+
     // Build where conditions including scope restrictions
-    const whereConditions = this.buildStaffWhereConditions(otherSearchQuery, userScopes);
+    const whereConditions = this.buildStaffWhereConditions(
+      otherSearchQuery,
+      userScopes,
+    );
 
     const total = await this.bookingRepository.count(whereConditions);
     const data = await this.bookingRepository.getManyBookings(
@@ -587,10 +627,13 @@ export class BookingService {
   async getStaffBookingStats(userScopes: any[]) {
     // Build where conditions for staff scope
     const whereConditions = this.buildStaffWhereConditions({}, userScopes);
-    
+
     const stats = await this.bookingRepository.getBookingStats(whereConditions);
-    
-    return ResponseBuilder.success(stats, 'Staff booking statistics retrieved successfully');
+
+    return ResponseBuilder.success(
+      stats,
+      'Staff booking statistics retrieved successfully',
+    );
   }
 
   /**
@@ -601,24 +644,24 @@ export class BookingService {
    */
   private buildStaffWhereConditions(
     query: Partial<SearchBookingsQuery>,
-    userScopes: any[]
+    userScopes: any[],
   ): SQL<unknown> | undefined {
     const conditions: any[] = [];
 
     // Add scope restrictions based on user's access
     const accessibleVenueIds = userScopes
-      .filter(scope => scope.venueId)
-      .map(scope => scope.venueId);
+      .filter((scope) => scope.venueId)
+      .map((scope) => scope.venueId);
 
     const accessibleFacilityIds = userScopes
-      .filter(scope => scope.facilityId)
-      .map(scope => scope.facilityId);
+      .filter((scope) => scope.facilityId)
+      .map((scope) => scope.facilityId);
 
     if (accessibleVenueIds.length > 0) {
       conditions.push(
-        accessibleVenueIds.length === 1 
+        accessibleVenueIds.length === 1
           ? eq(bookings.venueId, accessibleVenueIds[0])
-          : inArray(bookings.venueId, accessibleVenueIds)
+          : inArray(bookings.venueId, accessibleVenueIds),
       );
     }
 
@@ -631,7 +674,7 @@ export class BookingService {
             .where(
               and(
                 eq(venues.id, bookings.venueId),
-                inArray(venues.facilityId, accessibleFacilityIds)
+                inArray(venues.facilityId, accessibleFacilityIds),
               ),
             ),
         ),
@@ -668,5 +711,159 @@ export class BookingService {
     }
 
     return conditions.length > 0 ? and(...conditions) : undefined;
+  }
+
+  private async cancelConflictingPendingBookings(
+    confirmedBookingId: string,
+    venueId: string,
+    tx?: DrizzleTransaction,
+  ) {
+    const confirmedSlot = await this.slotRepository.getSlot(
+      and(
+        eq(slots.eventId, confirmedBookingId),
+        eq(slots.eventType, SlotEventType.BOOKING),
+        eq(slots.venueId, venueId),
+      ),
+      undefined,
+      tx,
+    );
+
+    if (!confirmedSlot) {
+      this.logger.warn(
+        `No slot found for confirmed booking ${confirmedBookingId}`,
+      );
+      return;
+    }
+
+    const overlappingSlots = await this.slotRepository.getManySlots(
+      and(
+        eq(slots.venueId, venueId),
+        eq(slots.eventType, SlotEventType.BOOKING),
+        lt(slots.startTime, confirmedSlot.endTime),
+        gt(slots.endTime, confirmedSlot.startTime),
+        ne(slots.eventId, confirmedBookingId),
+      ),
+      {
+        booking: {
+          with: {
+            match: true,
+          },
+        },
+      },
+      undefined,
+      undefined,
+      undefined,
+      tx,
+    );
+
+    const conflictingBookings = overlappingSlots.filter((slot) => {
+      if (!slot.booking || slot.booking.id === confirmedBookingId) {
+        return false;
+      }
+
+      if (slot.booking.status !== 'pending') {
+        return false;
+      }
+
+      const slotStart = new Date(slot.startTime);
+      const slotEnd = new Date(slot.endTime);
+      const confirmedStart = new Date(confirmedSlot.startTime);
+      const confirmedEnd = new Date(confirmedSlot.endTime);
+
+      return slotStart < confirmedEnd && slotEnd > confirmedStart;
+    });
+
+    this.logger.log(
+      `Found ${conflictingBookings.length} conflicting pending bookings to cancel`,
+    );
+
+    for (const conflictingSlot of conflictingBookings) {
+      const conflictingBooking = conflictingSlot.booking;
+
+      if (!conflictingBooking || !conflictingBooking.match) {
+        continue;
+      }
+
+      this.logger.log(
+        `Cancelling conflicting booking ${conflictingBooking.id}`,
+      );
+
+      try {
+        if (
+          conflictingBooking.match.paymentSplitType ===
+          PaymentSplitType.CREATOR_PAYS_ALL
+        ) {
+          await this.profileRepository.updateProfileCreditsById(
+            conflictingBooking.bookedBy,
+            conflictingBooking.totalCredits,
+            tx,
+          );
+        } else {
+          const players = await this.matchPlayerRepository.getManyMatchPlayers(
+            eq(matchPlayers.matchId, conflictingBooking.match.id),
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            tx,
+          );
+
+          if (players.length > 0) {
+            const creditsToRestorePerPlayer =
+              this.creditService.calculatePerPlayerCharge(
+                conflictingBooking.match.matchType as MatchType,
+                conflictingBooking.match.paymentSplitType as PaymentSplitType,
+                conflictingBooking.totalCredits,
+                conflictingBooking.match.playerLimit,
+              );
+
+            await Promise.all(
+              players.map((player) =>
+                this.profileRepository.updateProfileCreditsById(
+                  player.userId,
+                  creditsToRestorePerPlayer,
+                  tx,
+                ),
+              ),
+            );
+          }
+        }
+
+        await Promise.all([
+          this.bookingRepository.updateBookingById(
+            conflictingBooking.id,
+            {
+              status: 'cancelled',
+            },
+            tx,
+          ),
+          this.matchRepository.updateMatch(
+            eq(matches.bookingId, conflictingBooking.id),
+            { status: 'cancelled' },
+            tx,
+          ),
+        ]);
+
+        await this.slotRepository.deleteSlot(
+          and(
+            eq(slots.eventId, conflictingBooking.id),
+            eq(slots.eventType, SlotEventType.BOOKING),
+            eq(slots.venueId, venueId),
+          ),
+          tx,
+        );
+
+        this.bookingSchedulerService.cancelScheduledJob(conflictingBooking.id);
+
+        this.logger.log(
+          `Successfully cancelled conflicting booking ${conflictingBooking.id}`,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Error cancelling conflicting booking ${conflictingBooking.id}:`,
+          error,
+        );
+      }
+    }
   }
 }
