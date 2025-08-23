@@ -6,7 +6,13 @@ import {
 } from '@nestjs/common';
 import { MatchRepository } from './match.repository';
 import { UpdateMatchDto } from './dto/update-match.dto';
-import { Profile, profiles, slots, users, venueSports } from '@sportefy/db-types';
+import {
+  Profile,
+  profiles,
+  slots,
+  users,
+  venueSports,
+} from '@sportefy/db-types';
 import { and, eq, gte, inArray, lte, or } from 'drizzle-orm';
 import { matches, matchPlayers } from '@sportefy/db-types';
 import { ResponseBuilder } from 'src/common/utils/response-builder';
@@ -58,7 +64,9 @@ export class MatchService {
 
   async getUserMatches(user: Profile, getMatchesDto: GetMatchesDto) {
     const { limit, offset, page } = getMatchesDto;
-    const total = await this.matchPlayerRepository.count(eq(users.id, user.id));
+    const total = await this.matchPlayerRepository.count(
+      eq(matchPlayers.userId, user.id),
+    );
     const userMatches = await this.matchPlayerRepository.getMatchesByPlayer(
       user.id,
       { match: true },
@@ -118,10 +126,15 @@ export class MatchService {
     return ResponseBuilder.updated(updatedMatch, 'Match updated successfully');
   }
 
-  async joinMatch(matchId: string, user: Profile, team?: 'A' | 'B', message?: string) {
+  async joinMatch(
+    matchId: string,
+    user: Profile,
+    team?: 'A' | 'B',
+    message?: string,
+  ) {
     // For public matches, create a join request instead of directly joining
     const match = await this.matchRepository.getMatchById(matchId);
-    
+
     if (!match) {
       throw new NotFoundException('Match not found');
     }
@@ -145,7 +158,7 @@ export class MatchService {
   async joinMatchUsingCode(user: Profile, matchCode: string) {
     // Clean and validate the match code
     const cleanCode = MatchCodeGenerator.cleanCode(matchCode);
-    
+
     if (!MatchCodeGenerator.isValidMatchCode(cleanCode)) {
       throw new BadRequestException('Invalid match code format');
     }
@@ -224,10 +237,9 @@ export class MatchService {
    * Generate a new match code for a match (useful if the current one needs to be changed)
    */
   async regenerateMatchCode(user: Profile, matchId: string) {
-    const match = await this.matchRepository.getMatch(
-      eq(matches.id, matchId),
-      { booking: true },
-    );
+    const match = await this.matchRepository.getMatch(eq(matches.id, matchId), {
+      booking: true,
+    });
 
     if (!match || !match.booking) {
       throw new NotFoundException('Match not found');
@@ -255,7 +267,9 @@ export class MatchService {
       }
 
       if (attempts >= maxAttempts) {
-        throw new BadRequestException('Unable to generate unique match code. Please try again.');
+        throw new BadRequestException(
+          'Unable to generate unique match code. Please try again.',
+        );
       }
     } while (attempts < maxAttempts);
 
@@ -409,17 +423,20 @@ export class MatchService {
         slot: slots,
         matchPlayers: {
           ...matchPlayers,
-          user: profiles
+          user: profiles,
         },
       })
       .from(matches)
       .leftJoin(bookings, eq(matches.bookingId, bookings.id))
       .leftJoin(venues, eq(bookings.venueId, venues.id))
       .leftJoin(sports, eq(matches.sportId, sports.id))
-      .leftJoin(slots, and(
-        eq(slots.eventId, bookings.id),
-        eq(slots.eventType, SlotEventType.BOOKING)
-      ))
+      .leftJoin(
+        slots,
+        and(
+          eq(slots.eventId, bookings.id),
+          eq(slots.eventType, SlotEventType.BOOKING),
+        ),
+      )
       .leftJoin(matchPlayers, eq(matches.id, matchPlayers.matchId))
       .leftJoin(profiles, eq(matchPlayers.userId, profiles.id))
       .where(and(...conditions));

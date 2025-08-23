@@ -39,7 +39,6 @@ export class BookingController {
   @Auth(UserRole.USER)
   @Get()
   @ApiOperation({ summary: 'Get all bookings for the current user' })
-  @ApiQuery({ type: GetBookingsDto })
   async getUserBookings(
     @CurrentUser() user: Profile,
     @Query() getBookingsDto: GetBookingsDto,
@@ -73,18 +72,30 @@ export class BookingController {
   @Get('staff')
   @ApiOperation({ summary: 'Get all bookings for staff based on their scope' })
   @ApiQuery({ type: SearchBookingsQuery })
-  async getStaffBookings(@Query() searchBookingsQuery: SearchBookingsQuery, @CurrentUser() user: Profile) {
+  async getStaffBookings(
+    @Query() searchBookingsQuery: SearchBookingsQuery,
+    @CurrentUser() user: Profile,
+  ) {
     // Get user scopes from the user scope service
-    const userScopesResponse = await this.userScopeService.getMyUserScopes(user.id);
+    const userScopesResponse = await this.userScopeService.getMyUserScopes(
+      user.id,
+    );
     const userScopes = userScopesResponse.data || [];
-    return this.bookingService.getStaffBookings(searchBookingsQuery, userScopes);
+    return this.bookingService.getStaffBookings(
+      searchBookingsQuery,
+      userScopes,
+    );
   }
 
   @Auth(UserRole.ADMIN, UserRole.USER)
   @Get('staff/stats')
-  @ApiOperation({ summary: 'Get booking statistics for staff based on their scope' })
+  @ApiOperation({
+    summary: 'Get booking statistics for staff based on their scope',
+  })
   async getStaffBookingStats(@CurrentUser() user: Profile) {
-    const userScopesResponse = await this.userScopeService.getMyUserScopes(user.id);
+    const userScopesResponse = await this.userScopeService.getMyUserScopes(
+      user.id,
+    );
     const userScopes = userScopesResponse.data || [];
     return this.bookingService.getStaffBookingStats(userScopes);
   }

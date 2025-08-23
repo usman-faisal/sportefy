@@ -103,14 +103,15 @@ export class BookingService {
     startOfDay.setHours(0, 0, 0, 0);
 
     const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30));
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    thirtyDaysAgo.setHours(0, 0, 0, 0);
 
     const createdAtCondition =
       status === 'upcoming'
         ? gte(bookings.createdAt, startOfDay)
         : gte(bookings.createdAt, thirtyDaysAgo);
 
-    const bookingIsBookedByUser = eq(users.id, user.id);
+    const bookingIsBookedByUser = eq(bookings.bookedBy, user.id);
     const whereConditions = and(createdAtCondition, bookingIsBookedByUser);
     const total = await this.bookingRepository.count(whereConditions);
     const result = await this.bookingRepository.getManyBookings(
