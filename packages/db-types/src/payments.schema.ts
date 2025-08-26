@@ -5,49 +5,55 @@ import {
   text,
   timestamp,
   pgEnum,
-} from 'drizzle-orm/pg-core';
-import { relations, sql } from 'drizzle-orm';
-import { users } from './users.schema';
-import { transactions } from './transactions.schema';
+} from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
+import { users } from "./users.schema";
+import { transactions } from "./transactions.schema";
+import { memberships } from "./memberships.schema";
 
 // Define enums for payment method and status
-export const paymentMethodEnum = pgEnum('payment_method', [
-  'bank_transfer',
-  'card',
+export const paymentMethodEnum = pgEnum("payment_method", [
+  "bank_transfer",
+  "card",
 ]);
-export const paymentStatusEnum = pgEnum('payment_status', [
-  'pending',
-  'approved',
-  'rejected',
+export const paymentStatusEnum = pgEnum("payment_status", [
+  "pending",
+  "approved",
+  "rejected",
 ]);
 
-export const payments = pgTable('payments', {
-  id: uuid('id')
+export const payments = pgTable("payments", {
+  id: uuid("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
 
-  userId: uuid('user_id')
+  userId: uuid("user_id")
     .notNull()
     .references(() => users.id, {
-      onDelete: 'cascade',
+      onDelete: "cascade",
     }),
 
-  amountCredits: integer('amount_credits').notNull(),
+  amount: integer("amount").notNull(),
 
-  method: paymentMethodEnum('method').notNull(),
+  method: paymentMethodEnum("method").notNull(),
 
-  status: paymentStatusEnum('status').notNull().default('pending'),
+  status: paymentStatusEnum("status").notNull().default("pending"),
 
-  screenshotUrl: text('screenshot_url'), // Nullable, as it's added after initiation
+  screenshotUrl: text("screenshot_url"), // Nullable, as it's added after initiation
 
-  rejectionReason: text('rejection_reason'), // Nullable
+  rejectionReason: text("rejection_reason"), // Nullable
 
-  verifiedBy: uuid('verified_by').references(() => users.id, {
-    onDelete: 'set null',
+  verifiedBy: uuid("verified_by").references(() => users.id, {
+    onDelete: "set null",
   }), // Admin who verified
 
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
+  purchasedMembershipId: uuid("purchased_membership_id").references(
+    () => memberships.id,
+    { onDelete: "set null" }
+  ),
+
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Define relationships for the payments table
@@ -56,13 +62,17 @@ export const paymentsRelations = relations(payments, ({ one, many }) => ({
   user: one(users, {
     fields: [payments.userId],
     references: [users.id],
-    relationName: 'payment_user',
+    relationName: "payment_user",
+  }),
+  purchasedMembership: one(memberships, {
+    fields: [payments.purchasedMembershipId],
+    references: [memberships.id],
   }),
   // The admin who verified the payment
   verifier: one(users, {
     fields: [payments.verifiedBy],
     references: [users.id],
-    relationName: 'payment_verifier',
+    relationName: "payment_verifier",
   }),
   transaction: one(transactions),
 }));

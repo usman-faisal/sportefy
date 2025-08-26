@@ -5,50 +5,51 @@ import {
   timestamp,
   pgEnum,
   text,
-} from 'drizzle-orm/pg-core';
-import { relations, sql } from 'drizzle-orm';
-import { payments } from './payments.schema';
-import { bookings } from './bookings.schema';
-import { users } from './users.schema';
-import { profiles } from './profiles.schema';
+} from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
+import { payments } from "./payments.schema";
+import { bookings } from "./bookings.schema";
+import { users } from "./users.schema";
+import { profiles } from "./profiles.schema";
 
 // Define enum for the type of transaction
-export const transactionTypeEnum = pgEnum('transaction_type', [
-  'top_up',
-  'booking_fee',
-  'cancellation_refund',
-  'transfer_in',
-  'transfer_out',
+export const transactionTypeEnum = pgEnum("transaction_type", [
+  "top_up",
+  "booking_fee",
+  "cancellation_refund",
+  "transfer_in",
+  "transfer_out",
+  "membership_purchase",
 ]);
 
-export const transactions = pgTable('transactions', {
-  id: uuid('id')
+export const transactions = pgTable("transactions", {
+  id: uuid("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
 
-  userId: uuid('user_id')
+  userId: uuid("user_id")
     .notNull()
     .references(() => users.id, {
-      onDelete: 'cascade',
+      onDelete: "cascade",
     }),
 
-  type: transactionTypeEnum('type').notNull(),
+  type: transactionTypeEnum("type").notNull(),
 
   // Amount can be positive (top-up/refund) or negative (booking_fee)
-  amount: integer('amount').notNull(),
+  amount: integer("amount").notNull(),
 
   // Nullable foreign keys, as a transaction might relate to only one
-  paymentId: uuid('payment_id').references(() => payments.id, {
-    onDelete: 'set null',
+  paymentId: uuid("payment_id").references(() => payments.id, {
+    onDelete: "set null",
   }),
 
-  bookingId: uuid('booking_id').references(() => bookings.id, {
-    onDelete: 'set null',
+  bookingId: uuid("booking_id").references(() => bookings.id, {
+    onDelete: "set null",
   }),
 
-  notes: text('notes'),
+  notes: text("notes"),
 
-  createdAt: timestamp('created_at').defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Define relationships for the transactions table

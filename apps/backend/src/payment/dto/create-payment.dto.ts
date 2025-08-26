@@ -1,6 +1,6 @@
 // src/payment/dto/create-payment.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { IsIn, IsInt, IsNotEmpty, Min } from 'class-validator';
+import { IsIn, IsInt, IsNotEmpty, IsUUID, Min } from 'class-validator';
 
 export class CreatePaymentDto {
   @ApiProperty({

@@ -20,4 +20,4 @@ services:
       - key: PORT
         value: 3000
     # Optional: Run migrations after deployment
-    # postDeployCommand: pnpm --filter backend db:migrate:prod 
+    # postDeployCommand: pnpm --filter backend db:migrate:prod

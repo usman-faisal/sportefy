@@ -213,4 +213,34 @@ export class ProfileRepository extends BaseRepository {
     const [totalResult] = await query;
     return totalResult.count;
   }
+
+  async incrementProfileBenefits(
+    id: string,
+    benefits: { credits?: number; checkIns?: number },
+    tx?: DrizzleTransaction,
+  ) {
+    const dbClient = tx || this.db;
+
+    const fieldsToUpdate: { credits?: any; checkIns?: any } = {};
+
+    if (benefits.credits && benefits.credits > 0) {
+      fieldsToUpdate.credits = sql`${profiles.credits} + ${benefits.credits}`;
+    }
+
+    if (benefits.checkIns && benefits.checkIns > 0) {
+      fieldsToUpdate.checkIns = sql`${profiles.checkIns} + ${benefits.checkIns}`;
+    }
+
+    if (Object.keys(fieldsToUpdate).length === 0) {
+      return;
+    }
+
+    const updatedProfile = await dbClient
+      .update(profiles)
+      .set(fieldsToUpdate)
+      .where(eq(profiles.id, id))
+      .returning();
+
+    return updatedProfile[0];
+  }
 }

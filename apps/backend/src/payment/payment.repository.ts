@@ -7,6 +7,7 @@ import { payments, Payment, NewPayment } from '@sportefy/db-types';
 import { eq } from 'drizzle-orm';
 import { DrizzleTransaction } from 'src/database/types';
 import { BaseRepository } from 'src/common/base.repository';
+import { IncludeRelation, InferResultType } from 'src/database/utils';
 
 export type PaymentsWithInput = NonNullable<
   Parameters<DrizzleClient['query']['payments']['findFirst']>[0]
@@ -45,10 +46,18 @@ export class PaymentRepository extends BaseRepository {
     });
   }
 
-  async getPaymentById(id: string, tx?: DrizzleTransaction) {
-    return this.getPayment(eq(payments.id, id), undefined, tx);
+  async getPaymentById<TWith extends IncludeRelation<'payments'>>(
+    id: string,
+    withRelations?: TWith,
+    tx?: DrizzleTransaction,
+  ): Promise<InferResultType<'payments', TWith> | undefined> {
+    const dbClient = tx || this.db;
+    return dbClient.query.payments.findFirst({
+      where: eq(payments.id, id),
+      with: withRelations,
+    }) as Promise<InferResultType<'payments', TWith> | undefined>;
   }
-  
+
   async getManyPayments(
     where: PaymentsWhereInput,
     withRelations?: PaymentsWithInput,

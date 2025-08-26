@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Profile } from '@sportefy/db-types';
+import { Membership, Profile } from '@sportefy/db-types';
 import { ProfileRepository } from 'src/profile/profile.repository';
 import { ResponseBuilder } from 'src/common/utils/response-builder';
 import { UploadProofDto } from './dto/upload-proof.dto';
@@ -15,6 +15,7 @@ import { PaymentRepository } from './payment.repository';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UnitOfWork } from 'src/common/services/unit-of-work.service';
 import { TransactionRepository } from 'src/transaction/transaction.repository';
+import { UserMembershipRepository } from 'src/user-membership/user-membership.repository';
 
 @Injectable()
 export class PaymentService {
@@ -24,12 +25,13 @@ export class PaymentService {
     private readonly transactionRepository: TransactionRepository,
     private readonly eventEmitter: EventEmitter2,
     private readonly unitOfWork: UnitOfWork,
+    private readonly userMembershipRepository: UserMembershipRepository,
   ) {}
 
   async initiateTopUp(user: Profile, createPaymentDto: CreatePaymentDto) {
     const payment = await this.paymentRepository.createPayment({
       userId: user.id,
-      amountCredits: createPaymentDto.amount,
+      amount: createPaymentDto.amount,
       method: createPaymentDto.method,
     });
 
@@ -40,6 +42,25 @@ export class PaymentService {
           'Please transfer the amount to XYZ Bank, Account: 12345. Use your email as the reference. Then upload the screenshot.',
       },
       'Payment initiated. Please follow the instructions.',
+    );
+  }
+
+  async initiateMembershipPayment(user: Profile, plan: Membership) {
+    const payment = await this.paymentRepository.createPayment({
+      userId: user.id,
+      amount: plan.price,
+      method: 'bank_transfer',
+      purchasedMembershipId: plan.id,
+    });
+
+    return ResponseBuilder.created(
+      {
+        paymentId: payment.id,
+        instructions: `Please transfer ${plan.price / 100} to purchase the ${
+          plan.name
+        } plan. Use your email as the reference.`,
+      },
+      'Membership purchase initiated. Please follow the instructions.',
     );
   }
 
@@ -55,10 +76,12 @@ export class PaymentService {
     if (payment.status !== 'pending')
       throw new BadRequestException('This payment is already processed.');
 
+    const { screenshotUrl } = uploadProofDto;
+
     const updatedPayment = await this.paymentRepository.updatePayment(
       paymentId,
       {
-        screenshotUrl: uploadProofDto.screenshotUrl,
+        screenshotUrl,
       },
     );
 
@@ -81,7 +104,9 @@ export class PaymentService {
   ) {
     const { status, rejectionReason } = verifyPaymentDto;
 
-    const payment = await this.paymentRepository.getPaymentById(paymentId);
+    const payment = await this.paymentRepository.getPaymentById(paymentId, {
+      purchasedMembership: true,
+    });
     if (!payment) throw new NotFoundException('Payment not found.');
     if (payment.status !== 'pending')
       throw new BadRequestException('Payment has already been processed.');
@@ -91,41 +116,76 @@ export class PaymentService {
     const result = await this.unitOfWork.do(async (tx) => {
       const updatedPayment = await this.paymentRepository.updatePayment(
         paymentId,
-        {
-          status,
-          rejectionReason,
-          verifiedBy: admin.id,
-        },
+        { status, rejectionReason, verifiedBy: admin.id },
         tx,
       );
 
       if (status === 'approved') {
-        // 1. Add credits to the user's profile
-        await this.profileRepository.updateProfileCreditsById(
-          payment.userId,
-          payment.amountCredits,
-          tx,
-        );
+        if (payment.purchasedMembershipId && payment.purchasedMembership) {
+          const plan = payment.purchasedMembership;
 
-        // 2. Log this in the transaction ledger
-        await this.transactionRepository.createTransaction(
-          {
-            userId: payment.userId,
-            type: 'top_up',
-            amount: payment.amountCredits,
-            paymentId: payment.id,
-          },
-          tx,
-        );
+          await this.profileRepository.incrementProfileBenefits(
+            payment.userId,
+            {
+              credits: plan.creditsGranted,
+              checkIns: plan.checkInsGranted,
+            },
+            tx,
+          );
+
+          // 2. Create the UserMembership record
+          const startDate = new Date();
+          const endDate = new Date(
+            startDate.getTime() + plan.durationDays * 24 * 60 * 60 * 1000,
+          );
+
+          await this.userMembershipRepository.createUserMembership(
+            {
+              userId: payment.userId,
+              membershipId: plan.id,
+              paymentId: payment.id,
+              startDate,
+              endDate,
+            },
+            tx,
+          );
+
+          // 3. Log the transaction
+          await this.transactionRepository.createTransaction(
+            {
+              userId: payment.userId,
+              type: 'membership_purchase',
+              amount: payment.amount, // Log the monetary value
+              paymentId: payment.id,
+              notes: `Purchased ${plan.name} Membership`,
+            },
+            tx,
+          );
+        } else {
+          // THIS IS THE OLD LOGIC: Handle a standard credit top-up
+          await this.profileRepository.updateProfileCreditsById(
+            payment.userId,
+            payment.amount, // Assuming 'amount' now represents credits for top-ups
+            tx,
+          );
+          await this.transactionRepository.createTransaction(
+            {
+              userId: payment.userId,
+              type: 'top_up',
+              amount: payment.amount,
+              paymentId: payment.id,
+            },
+            tx,
+          );
+        }
       }
-
       return updatedPayment;
     });
 
     // Emit events for notifications
     this.eventEmitter.emit(`payment.${status}`, {
       userId: payment.userId,
-      amount: payment.amountCredits,
+      amount: payment.amount,
       reason: rejectionReason,
     });
 
@@ -133,15 +193,15 @@ export class PaymentService {
   }
 
   async getMyTransactionHistory(user: Profile) {
-    const history = await this.transactionRepository.getUserTransactions(user.id);
+    const history = await this.transactionRepository.getUserTransactions(
+      user.id,
+    );
     return ResponseBuilder.success(history);
   }
 
-
   async getUserTransactionHistory(userId: string) {
-    const transactions = await this.transactionRepository.getUserTransactions(
-      userId,
-    );
+    const transactions =
+      await this.transactionRepository.getUserTransactions(userId);
     return ResponseBuilder.success(transactions);
   }
 }

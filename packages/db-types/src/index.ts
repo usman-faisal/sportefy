@@ -17,6 +17,8 @@ export * from "./transactions.schema";
 export * from "./venue-sports.schema";
 export * from "./check-ins.schema";
 export * from "./reviews.schema";
+export * from "./memberships.schema";
+export * from "./user-memberships.schema";
 
 export type { Venue, NewVenue } from "./venues.schema";
 export type { Facility, NewFacility } from "./facilities.schema";
@@ -32,7 +34,10 @@ export type {
 export type { Slot, NewSlot } from "./slots.schema";
 export type { Match, NewMatch } from "./matches.schema";
 export type { MatchPlayer, NewMatchPlayer } from "./match-players.schema";
-export type { MatchJoinRequest, NewMatchJoinRequest } from "./match-join-requests.schema";
+export type {
+  MatchJoinRequest,
+  NewMatchJoinRequest,
+} from "./match-join-requests.schema";
 export type { Payment, NewPayment } from "./payments.schema";
 export type { Transaction, NewTransaction } from "./transactions.schema";
 export type { VenueSport, NewVenueSport } from "./venue-sports.schema";

@@ -33,6 +33,9 @@ import { CheckInModule } from './check-in/check-in.module';
 import { ReviewModule } from './review/review.module';
 import { PaymentGatewayModule } from './payment-gateway/payment-gateway.module';
 import { MatchJoinRequestModule } from './match-join-request/match-join-request.module';
+import { MembershipService } from './membership/membership.service';
+import { MembershipModule } from './membership/membership.module';
+import { UserMembershipModule } from './user-membership/user-membership.module';
 
 @Module({
   imports: [
@@ -67,7 +70,9 @@ import { MatchJoinRequestModule } from './match-join-request/match-join-request.
     ReviewModule,
     SportModule,
     PaymentGatewayModule,
-    MatchJoinRequestModule
+    MatchJoinRequestModule,
+    MembershipModule,
+    UserMembershipModule,
   ],
   controllers: [AppController],
   providers: [
