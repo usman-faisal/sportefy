@@ -31,8 +31,8 @@ export class CreateReviewDto {
   rating: number;
 
   @ApiProperty({ type: [CreateMediaDto] })
-  @IsArray()
   @IsOptional()
+  @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateMediaDto)
   media: CreateMediaDto[];
