@@ -34,12 +34,12 @@ export class UserController {
     return this.userService.getUserDetails(id);
   }
 
-  //   @Patch(':id/status')
-  //   @ApiOperation({ summary: 'Block or unblock a user' })
-  //   updateUserStatus(
-  //     @Param('id', ParseUUIDPipe) id: string,
-  //     @Body() updateStatusDto: UpdateUserStatusDto,
-  //   ) {
-  //     return this.userManagementService.updateUserStatus(id, updateStatusDto);
-  //   }
+  @Patch(':id/status')
+  @ApiOperation({ summary: 'Block or unblock a user' })
+  updateUserStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateStatusDto: UpdateUserStatusDto,
+  ) {
+    return this.userService.updateUserStatus(id, updateStatusDto);
+  }
 }

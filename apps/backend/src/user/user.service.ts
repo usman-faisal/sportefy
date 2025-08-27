@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { ProfileRepository } from 'src/profile/profile.repository';
 import { ResponseBuilder } from 'src/common/utils/response-builder';
 import { SearchUsersDto } from './dto/search-users.dto';
+import { UpdateUserStatusDto } from './dto/update-user-status.dto';
 
 @Injectable()
 export class UserService {
@@ -44,15 +45,21 @@ export class UserService {
     return ResponseBuilder.success(user);
   }
 
-  //   async updateUserStatus(userId: string, updateStatusDto: UpdateUserStatusDto) {
-  //     const existingUser = await this.profileRepository.getProfileById(userId);
-  //     if (!existingUser) {
-  //       throw new NotFoundException('User not found.');
-  //     }
+  async updateUserStatus(userId: string, updateStatusDto: UpdateUserStatusDto) {
+    const existingUser = await this.profileRepository.getProfileById(userId);
+    if (!existingUser) {
+      throw new NotFoundException('User not found.');
+    }
 
-  //     const updatedUser = await this.userRepository.updateUserById(userId, {});
+    const [updatedUser] = await this.profileRepository.updateProfileById(
+      userId,
+      { isBlocked: updateStatusDto.isBlocked, updatedAt: new Date() },
+    );
 
-  //     const status = updatedUser.isBlocked ? 'blocked' : 'unblocked';
-  //     return ResponseBuilder.updated(updatedUser, `User successfully ${status}.`);
-  //   }
+    const status = updatedUser.isBlocked ? 'blocked' : 'unblocked';
+    return ResponseBuilder.updated(
+      updatedUser,
+      `User successfully ${status}.`,
+    );
+  }
 }

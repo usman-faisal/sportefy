@@ -7,40 +7,43 @@ import {
   integer,
   varchar,
   check,
-} from 'drizzle-orm/pg-core';
-import { users } from './users.schema';
+  boolean,
+} from "drizzle-orm/pg-core";
+import { users } from "./users.schema";
 import {
   InferInsertModel,
   InferSelectModel,
   relations,
   sql,
-} from 'drizzle-orm';
-import { userScopes } from './user-scopes.schema';
-import { bookings } from './bookings.schema';
-import { transactions } from './transactions.schema';
-import { reviews } from './reviews.schema';
+} from "drizzle-orm";
+import { userScopes } from "./user-scopes.schema";
+import { bookings } from "./bookings.schema";
+import { transactions } from "./transactions.schema";
+import { reviews } from "./reviews.schema";
 
-export const roleEnum = pgEnum('user_role', ['admin', 'user']);
-export const genderEnum = pgEnum('gender', ['male', 'female']);
+export const roleEnum = pgEnum("user_role", ["admin", "user"]);
+export const genderEnum = pgEnum("gender", ["male", "female"]);
 
 export const profiles = pgTable(
-  'profiles',
+  "profiles",
   {
-    id: uuid('id')
+    id: uuid("id")
       .primaryKey()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, { onDelete: "cascade" }),
 
-    fullName: text('full_name').notNull(),
+    fullName: text("full_name").notNull(),
 
-    role: roleEnum().default('user').notNull(),
+    role: roleEnum().default("user").notNull(),
 
-    avatarUrl: text('avatar_url'),
+    avatarUrl: text("avatar_url"),
 
-    email: varchar('email', { length: 255 }).notNull().unique(),
+    isBlocked: boolean("is_blocked").default(false).notNull(),
+
+    email: varchar("email", { length: 255 }).notNull().unique(),
     /*
       USER DETAILS
     */
-    userName: varchar('user_name', { length: 255 }).unique(),
+    userName: varchar("user_name", { length: 255 }).unique(),
 
     gender: genderEnum(),
 
@@ -50,20 +53,20 @@ export const profiles = pgTable(
 
     organization: text(),
 
-    phoneNumber: varchar('phone_number', { length: 255 }),
+    phoneNumber: varchar("phone_number", { length: 255 }),
 
-    credits: integer('credits').default(0),
-    checkIns: integer('check_ins').default(0),
+    credits: integer("credits").default(0),
+    checkIns: integer("check_ins").default(0),
 
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   },
   (table) => [
-    check('age_check', sql`${table.age} > 0 AND ${table.age} < 100`),
-    check('username_check', sql`length(${table.userName}) < 16`),
-    check('credits_check', sql`${table.credits} >= 0`), // Ensure credits cannot be negative
-    check('check_ins_check', sql`${table.checkIns} >= 0`), // Ensure check-ins cannot be negative
-  ],
+    check("age_check", sql`${table.age} > 0 AND ${table.age} < 100`),
+    check("username_check", sql`length(${table.userName}) < 16`),
+    check("credits_check", sql`${table.credits} >= 0`), // Ensure credits cannot be negative
+    check("check_ins_check", sql`${table.checkIns} >= 0`), // Ensure check-ins cannot be negative
+  ]
 );
 
 export const profilesRelations = relations(profiles, ({ one, many }) => ({

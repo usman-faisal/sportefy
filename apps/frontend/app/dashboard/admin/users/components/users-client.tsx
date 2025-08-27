@@ -13,6 +13,7 @@ import { Search, Users, Eye } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { PaginationData } from "@/lib/api/types";
 import { UserColumn, columns } from "./columns";
+import { setUserBlockedStatus } from "@/lib/actions/user-actions";
 
 interface UsersClientProps {
   initialUsers: Profile[];
@@ -66,6 +67,7 @@ export const UsersClient: React.FC<UsersClientProps> = ({
         ...column,
         cell: ({ row }: { row: { original: UserColumn } }) => {
           const user = row.original.original;
+          const isBlocked = Boolean(user.isBlocked);
           return (
             <div className="flex items-center space-x-2">
               <Button 
@@ -76,8 +78,20 @@ export const UsersClient: React.FC<UsersClientProps> = ({
                 <Eye className="h-4 w-4 mr-1" />
                 View
               </Button>
-              <Button variant="outline" size="sm" disabled className="opacity-50">
-                Block
+              <Button
+                variant={isBlocked ? "destructive" : "outline"}
+                size="sm"
+                onClick={async () => {
+                  const next = !isBlocked;
+                  const res = await setUserBlockedStatus(user.id, next);
+                  if (res.success) {
+                    router.refresh();
+                  } else {
+                    console.error(res.error);
+                  }
+                }}
+              >
+                {isBlocked ? "Unblock" : "Block"}
               </Button>
             </div>
           );
