@@ -82,6 +82,11 @@ const globalAdminLinks: NavigationItem[] = [
     icon: BarChart2,
     label: "Global Reports",
   },
+  {
+    href: "/dashboard/admin/memberships",
+    icon: Shield,
+    label: "Memberships",
+  },
 ];
 
 const staffLinks: NavigationItem[] = [

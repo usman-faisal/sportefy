@@ -7,6 +7,7 @@ import {
   Sport,
   Transaction,
   Venue,
+  Membership,
   MaintenanceSchedule,
 } from "@sportefy/db-types";
 import { api, apiPaginated, PaginatedResponse } from "./api";
@@ -125,6 +126,37 @@ export const userService = {
     userId: string
   ): Promise<ProfileWithDetails | null> => {
     const response = await api<Profile>(`/admin/users/${userId}`);
+    return response?.data || null;
+  },
+};
+
+export const membershipService = {
+  getAll: async () => {
+    const response = await api<Membership[]>("/admin/memberships");
+    return response?.data || [];
+  },
+  getById: async (id: string) => {
+    const response = await api<Membership>(`/admin/memberships/${id}`);
+    return response?.data || null;
+  },
+  create: async (payload: Partial<Membership>) => {
+    const response = await api<Membership>(`/admin/memberships`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    return response?.data || null;
+  },
+  update: async (id: string, payload: Partial<Membership>) => {
+    const response = await api<Membership>(`/admin/memberships/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+    return response?.data || null;
+  },
+  remove: async (id: string) => {
+    const response = await api<Membership>(`/admin/memberships/${id}`, {
+      method: "DELETE",
+    });
     return response?.data || null;
   },
 };

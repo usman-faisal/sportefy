@@ -73,7 +73,6 @@ export class BookingService {
     private readonly bookingSchedulerService: BookingSchedulerService,
     private readonly eventEmitter: EventEmitter2,
     private readonly creditService: CreditService,
-    private readonly jwtService: JwtService,
     private readonly unitOfWork: UnitOfWork,
     private readonly venueSportRepository: VenueSportRepository,
   ) {}
@@ -116,7 +115,24 @@ export class BookingService {
     const total = await this.bookingRepository.count(whereConditions);
     const result = await this.bookingRepository.getManyBookings(
       whereConditions,
-      undefined,
+      {
+        bookedByProfile: true,
+        venue: {
+          columns: {
+            name: true,
+            address: true
+          },
+          with: {
+            media: true
+          } 
+        },
+        slot: true,
+        match: {
+          with: { 
+            sport: true,
+          },
+        },
+      },
       limit,
       offset,
       (bookings, { desc }) => desc(bookings.createdAt),
