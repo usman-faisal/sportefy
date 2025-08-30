@@ -89,7 +89,7 @@ export class ReviewService {
       );
 
       // If media is provided, handle it
-      if (createReviewDto.media) {
+      if (createReviewDto.media && createReviewDto.media.length > 0) {
         const mediaData: NewMedia[] = createReviewDto.media.map((media) => ({
           ...media,
           entityId: review.id,
