@@ -51,14 +51,14 @@ export const VerifyPaymentModal: React.FC<VerifyPaymentModalProps> = ({
   return (
     <Modal
       title="Verify Payment Request"
-      description={`Reviewing payment of ${payment.amountCredits} credits from ${payment.user?.fullName}.`}
+      description={`Reviewing payment of ${payment.amount} credits from ${payment.profile?.fullName}.`}
       isOpen={isOpen}
       onClose={onClose}
     >
       <div className="space-y-4">
         <div className="text-sm">
-          <p><strong>User:</strong> {payment.user?.fullName} ({payment.user?.email})</p>
-          <p><strong>Amount:</strong> {payment.amountCredits} credits</p>
+          <p><strong>User:</strong> {payment.profile?.fullName} ({payment.profile?.email})</p>
+          <p><strong>Amount:</strong> {payment.amount} credits</p>
           <a href={payment.screenshotUrl || "#"} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
             View Proof of Payment
           </a>

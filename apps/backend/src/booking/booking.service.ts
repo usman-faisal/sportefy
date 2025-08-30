@@ -75,7 +75,7 @@ export class BookingService {
     private readonly creditService: CreditService,
     private readonly unitOfWork: UnitOfWork,
     private readonly venueSportRepository: VenueSportRepository,
-  ) {}
+  ) { }
 
   async getBooking(user: Profile, bookingId: string) {
     const [booking] = await this.bookingRepository.getBookingsWithJoinedSlot(
@@ -97,21 +97,48 @@ export class BookingService {
   async getUserBookings(user: Profile, getBookingsDto: GetBookingsDto) {
     const { limit, offset, page, status } = getBookingsDto;
 
-    const startOfDay = new Date();
-
-    startOfDay.setHours(0, 0, 0, 0);
-
+    const now = new Date();
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    thirtyDaysAgo.setHours(0, 0, 0, 0);
-
-    const createdAtCondition =
-      status === 'upcoming'
-        ? gte(bookings.createdAt, startOfDay)
-        : gte(bookings.createdAt, thirtyDaysAgo);
 
     const bookingIsBookedByUser = eq(bookings.bookedBy, user.id);
-    const whereConditions = and(createdAtCondition, bookingIsBookedByUser);
+
+    let whereConditions;
+    if (status === 'upcoming') {
+      whereConditions = and(
+        bookingIsBookedByUser,
+        exists(
+          this.bookingRepository.db
+            .select()
+            .from(slots)
+            .where(
+              and(
+                eq(slots.eventId, bookings.id),
+                eq(slots.eventType, 'booking'),
+                gte(slots.startTime, now)
+              )
+            )
+        )
+      );
+    } else {
+      whereConditions = and(
+        bookingIsBookedByUser,
+        exists(
+          this.bookingRepository.db
+            .select()
+            .from(slots)
+            .where(
+              and(
+                eq(slots.eventId, bookings.id),
+                eq(slots.eventType, 'booking'),
+                lt(slots.startTime, now),
+                gte(slots.startTime, thirtyDaysAgo)
+              )
+            )
+        )
+      );
+    }
+
     const total = await this.bookingRepository.count(whereConditions);
     const result = await this.bookingRepository.getManyBookings(
       whereConditions,
@@ -124,19 +151,21 @@ export class BookingService {
           },
           with: {
             media: true
-          } 
+          }
         },
         slot: true,
         match: {
-          with: { 
+          with: {
             sport: true,
           },
         },
       },
       limit,
       offset,
+      // Sort by booking creation time (we can't easily sort by slot time in this query structure)
       (bookings, { desc }) => desc(bookings.createdAt),
     );
+
     const paginationLimit = limit || 10;
     const paginationPage = page || 1;
 
