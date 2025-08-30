@@ -155,6 +155,7 @@ export class MatchRepository extends BaseRepository {
             },
           },
         },
+        sport: true,
         booking: {
           with: {
             slot: true,

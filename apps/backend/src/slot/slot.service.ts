@@ -46,7 +46,7 @@ export class SlotService {
     private readonly venueRepository: VenueRepository,
     private readonly operatingHourRepository: OperatingHourRepository,
     private readonly slotRepository: SlotRepository,
-  ) {}
+  ) { }
 
   async validateTimeSlot(
     venueId: string,
@@ -83,7 +83,7 @@ export class SlotService {
         and(
           eq(slots.eventType, 'booking'),
           lt(slots.startTime, endTime),
-          gt(slots.endTime, startTime),
+          gte(slots.endTime, startTime),
           exists(
             this.slotRepository.db
               .select()
@@ -102,7 +102,14 @@ export class SlotService {
         },
       );
 
-      if (userOverlappingBookings.length > 0) {
+      const actuallyOverlappingBookings = userOverlappingBookings.filter((slot) => {
+        const slotStart = new Date(slot.startTime);
+        const slotEnd = new Date(slot.endTime);
+
+        return startTime.getTime() < slotEnd.getTime() && endTime.getTime() > slotStart.getTime();
+      });
+
+      if (actuallyOverlappingBookings.length > 0) {
         throw new ConflictException(
           'You already have a booking during this time period. Please select a different time slot.',
         );
@@ -209,8 +216,8 @@ export class SlotService {
 
       throw new BadRequestException(
         `The requested time is outside of the venue's operating hours for ${startDayOfWeek}. ` +
-          `Operating hours: ${hoursInfo}. ` +
-          `Your booking: ${format(zonedStartTime, 'HH:mm')} - ${format(zonedEndTime, 'HH:mm')} PKT.`,
+        `Operating hours: ${hoursInfo}. ` +
+        `Your booking: ${format(zonedStartTime, 'HH:mm')} - ${format(zonedEndTime, 'HH:mm')} PKT.`,
       );
     }
   }
