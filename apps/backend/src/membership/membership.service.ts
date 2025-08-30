@@ -7,7 +7,7 @@ import { MembershipRepository } from './membership.repository';
 import { ResponseBuilder } from 'src/common/utils/response-builder';
 import { Profile } from '@sportefy/db-types';
 import { PurchaseMembershipDto } from './dto/purchase-membership.dto';
-import { CreateMembershipDto } from './dto/create-membership.dto';
+  import { CreateMembershipDto } from './dto/create-membership.dto';
 import { UpdateMembershipDto } from './dto/update-membership.dto';
 import { PaymentService } from 'src/payment/payment.service';
 import { UserMembershipRepository } from 'src/user-membership/user-membership.repository';
@@ -129,5 +129,11 @@ export class MembershipService {
     }
 
     return ResponseBuilder.success(membership);
+  }
+
+  async getUserMembershipsHistory(user: Profile) {
+    const memberships =
+      await this.userMembershipRepository.getUserMembershipsByUserId(user.id);
+    return ResponseBuilder.success(memberships);
   }
 }

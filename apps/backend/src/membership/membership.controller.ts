@@ -6,10 +6,14 @@ import { MembershipService } from './membership.service';
 import { PurchaseMembershipDto } from './dto/purchase-membership.dto';
 import { Profile } from '@sportefy/db-types';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { UserMembershipRepository } from 'src/user-membership/user-membership.repository';
 
 @Controller('memberships')
 export class MembershipController {
-  constructor(private readonly membershipService: MembershipService) {}
+  constructor(
+    private readonly membershipService: MembershipService,
+    private readonly userMembershipRepository: UserMembershipRepository,
+  ) {}
   @Auth(UserRole.USER, UserRole.ADMIN)
   @Get()
   @ApiOperation({ summary: 'Get all available membership plans' })
@@ -33,5 +37,12 @@ export class MembershipController {
   @ApiOperation({ summary: 'Get current user membership' })
   getCurrentUserMembership(@CurrentUser() user: Profile) {
     return this.membershipService.getUserMembership(user);
+  }
+
+  @Auth(UserRole.USER)
+  @Get('my')
+  @ApiOperation({ summary: 'Get your memberships history' })
+  getMyMemberships(@CurrentUser() user: Profile) {
+    return this.membershipService.getUserMembershipsHistory(user);
   }
 }

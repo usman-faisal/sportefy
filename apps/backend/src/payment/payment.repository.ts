@@ -4,7 +4,7 @@ import {
   DrizzleClient,
 } from 'src/common/providers/drizzle.provider';
 import { payments, Payment, NewPayment } from '@sportefy/db-types';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull, lt, gt } from 'drizzle-orm';
 import { DrizzleTransaction } from 'src/database/types';
 import { BaseRepository } from 'src/common/base.repository';
 import { IncludeRelation, InferResultType } from 'src/database/utils';
@@ -87,12 +87,57 @@ export class PaymentRepository extends BaseRepository {
     );
   }
 
+  /**
+   * Returns an active pending payment for the user that has not yet expired.
+   * A pending payment is considered active if it has status 'pending', no screenshot uploaded,
+   * and createdAt is within the provided threshold window.
+   */
+  async getActivePendingPaymentForUser(
+    userId: string,
+    thresholdDate: Date,
+    tx?: DrizzleTransaction,
+  ) {
+    const dbClient = tx || this.db;
+    return dbClient.query.payments.findFirst({
+      where: and(
+        eq(payments.userId, userId),
+        eq(payments.status, 'pending'),
+        isNull(payments.screenshotUrl),
+        gt(payments.createdAt, thresholdDate),
+      ),
+    });
+  }
+
+  async deletePayment(id: string, tx?: DrizzleTransaction) {
+    const dbClient = tx || this.db;
+    const [result] = await dbClient
+      .delete(payments)
+      .where(eq(payments.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteExpiredPendingPayments(thresholdDate: Date, tx?: DrizzleTransaction) {
+    const dbClient = tx || this.db;
+    const deleted = await dbClient
+      .delete(payments)
+      .where(
+        and(
+          eq(payments.status, 'pending'),
+          isNull(payments.screenshotUrl),
+          lt(payments.createdAt, thresholdDate),
+        ),
+      )
+      .returning();
+    return deleted.length;
+  }
+
   async updatePayment(
     id: string,
     data: Partial<NewPayment>,
     tx?: DrizzleTransaction,
   ) {
-    const dbClient = tx || this.db;
+    const dbClient = tx || this.db; 
     const [result] = await dbClient
       .update(payments)
       .set(data)

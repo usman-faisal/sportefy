@@ -1,6 +1,7 @@
 // src/payment/payment.service.ts
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -29,6 +30,17 @@ export class PaymentService {
   ) {}
 
   async initiateTopUp(user: Profile, createPaymentDto: CreatePaymentDto) {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const existing = await this.paymentRepository.getActivePendingPaymentForUser(
+      user.id,
+      oneHourAgo,
+    );
+    if (existing) {
+      throw new ConflictException(
+        'You already have a pending payment. Please upload proof or wait 1 hour.',
+      );
+    }
+
     const payment = await this.paymentRepository.createPayment({
       userId: user.id,
       amount: createPaymentDto.amount,
@@ -46,6 +58,17 @@ export class PaymentService {
   }
 
   async initiateMembershipPayment(user: Profile, plan: Membership) {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const existing = await this.paymentRepository.getActivePendingPaymentForUser(
+      user.id,
+      oneHourAgo,
+    );
+    if (existing) {
+      throw new ConflictException(
+        'You already have a pending payment. Please upload proof or wait 1 hour.',
+      );
+    }
+
     const payment = await this.paymentRepository.createPayment({
       userId: user.id,
       amount: plan.price,
@@ -75,6 +98,16 @@ export class PaymentService {
       throw new ForbiddenException('You cannot modify this payment.');
     if (payment.status !== 'pending')
       throw new BadRequestException('This payment is already processed.');
+
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    if (
+      !payment.screenshotUrl &&
+      payment.createdAt &&
+      payment.createdAt < oneHourAgo
+    ) {
+      await this.paymentRepository.deletePayment(payment.id);
+      throw new BadRequestException('Payment request expired and was removed.');
+    }
 
     const { screenshotUrl } = uploadProofDto;
 

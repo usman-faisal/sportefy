@@ -55,6 +55,10 @@ export class TransactionRepository extends BaseRepository {
     const dbClient = tx || this.db;
     return dbClient.query.transactions.findMany({
       where: eq(transactions.userId, userId),
+      with: {
+        booking: true,
+        payment: true,
+      },
       orderBy: (transactions, { desc }) => [desc(transactions.createdAt)],
     });
   }
