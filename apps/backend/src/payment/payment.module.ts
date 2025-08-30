@@ -6,7 +6,6 @@ import { ProfileModule } from 'src/profile/profile.module'; // Import to use Pro
 import { TransactionModule } from 'src/transaction/transaction.module';
 import { MembershipModule } from 'src/membership/membership.module';
 import { UserMembershipModule } from 'src/user-membership/user-membership.module';
-import { PaymentSchedulerService } from './payment.scheduler.service';
 
 @Module({
   imports: [
@@ -16,7 +15,7 @@ import { PaymentSchedulerService } from './payment.scheduler.service';
     UserMembershipModule,
   ],
   controllers: [PaymentController],
-  providers: [PaymentService, PaymentRepository, PaymentSchedulerService],
+  providers: [PaymentService, PaymentRepository],
   exports: [PaymentService],
 })
 export class PaymentModule {}
