@@ -67,12 +67,6 @@ export class PaymentController {
     return this.paymentService.verifyPayment(admin, id, verifyPaymentDto);
   }
 
-  @Auth(UserRole.USER)
-  @Get('history')
-  @ApiOperation({ summary: "Get the current user's transaction history" })
-  getMyTransactionHistory(@CurrentUser() user: Profile) {
-    return this.paymentService.getMyTransactionHistory(user);
-  }
 
   @Auth(UserRole.ADMIN)
   @Get('user/:userId/history')
@@ -84,5 +78,12 @@ export class PaymentController {
   ) {
     return this.paymentService.getUserTransactionHistory(userId);
   }
-  
+
+  @Auth(UserRole.USER)
+  @Get('history')
+  @ApiOperation({ summary: "Get the current user's payment history (pending/successful)" })
+  getMyPaymentHistory(@CurrentUser() user: Profile) {
+    return this.paymentService.getMyPaymentHistory(user);
+  }
+
 }

@@ -145,4 +145,15 @@ export class PaymentRepository extends BaseRepository {
       .returning();
     return result;
   }
+
+  async getUserPayments(userId: string, tx?: DrizzleTransaction) {
+    return this.getManyPayments(
+      eq(payments.userId, userId),
+      { purchasedMembership: true }, // Include membership details if applicable
+      undefined,
+      undefined,
+      (payments, { desc }) => [desc(payments.createdAt)],
+      tx,
+    );
+  }
 }

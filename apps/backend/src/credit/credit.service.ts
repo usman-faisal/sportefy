@@ -19,7 +19,7 @@ export class CreditService {
     private readonly transactionRepository: TransactionRepository,
     private readonly profileRepository: ProfileRepository,
     private readonly unitOfWork: UnitOfWork,
-  ) {}
+  ) { }
   /**
    * Calculates the number of credits to charge or refund for a single spot in a match.
    *
@@ -96,6 +96,8 @@ export class CreditService {
           userId: sender.id,
           type: 'transfer_out',
           amount: -amount,
+          senderId: sender.id,
+          receiverId: recipient.id,
           notes:
             notes || `Transfer to ${recipient.fullName || recipient.email}`,
         },
@@ -108,6 +110,8 @@ export class CreditService {
           userId: recipient.id,
           type: 'transfer_in',
           amount: amount,
+          senderId: sender.id,
+          receiverId: recipient.id,
           notes: notes || `Transfer from ${sender.fullName || sender.email}`,
         },
         tx,

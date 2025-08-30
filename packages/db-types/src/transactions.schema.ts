@@ -47,6 +47,14 @@ export const transactions = pgTable("transactions", {
     onDelete: "set null",
   }),
 
+  senderId: uuid("sender_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
+
+  receiverId: uuid("receiver_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
+
   notes: text("notes"),
 
   createdAt: timestamp("created_at").defaultNow(),
@@ -70,6 +78,15 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
     fields: [transactions.bookingId],
     references: [bookings.id],
   }),
+  sender: one(profiles, {
+    fields: [transactions.senderId],
+    references: [profiles.id],
+  }),
+  receiver: one(profiles, {
+    fields: [transactions.receiverId],
+    references: [profiles.id],
+  }),
+
 }));
 
 export type Transaction = typeof transactions.$inferSelect;

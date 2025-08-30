@@ -58,6 +58,9 @@ export class TransactionRepository extends BaseRepository {
       with: {
         booking: true,
         payment: true,
+        sender: { columns: { fullName: true, avatarUrl: true, email: true } },
+        receiver: { columns: { fullName: true, avatarUrl: true, email: true } }
+
       },
       orderBy: (transactions, { desc }) => [desc(transactions.createdAt)],
     });

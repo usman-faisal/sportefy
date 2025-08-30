@@ -225,16 +225,16 @@ export class PaymentService {
     return ResponseBuilder.success(result, `Payment successfully ${status}.`);
   }
 
-  async getMyTransactionHistory(user: Profile) {
-    const history = await this.transactionRepository.getUserTransactions(
-      user.id,
-    );
-    return ResponseBuilder.success(history);
-  }
 
   async getUserTransactionHistory(userId: string) {
     const transactions =
       await this.transactionRepository.getUserTransactions(userId);
     return ResponseBuilder.success(transactions);
   }
+
+  async getMyPaymentHistory(user: Profile) {
+    const payments = await this.paymentRepository.getUserPayments(user.id);
+    return ResponseBuilder.success(payments);
+  }
+
 }
