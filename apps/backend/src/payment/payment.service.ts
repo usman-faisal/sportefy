@@ -27,7 +27,7 @@ export class PaymentService {
     private readonly eventEmitter: EventEmitter2,
     private readonly unitOfWork: UnitOfWork,
     private readonly userMembershipRepository: UserMembershipRepository,
-  ) {}
+  ) { }
 
   async initiateTopUp(user: Profile, createPaymentDto: CreatePaymentDto) {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
@@ -79,9 +79,8 @@ export class PaymentService {
     return ResponseBuilder.created(
       {
         paymentId: payment.id,
-        instructions: `Please transfer ${plan.price / 100} to purchase the ${
-          plan.name
-        } plan. Use your email as the reference.`,
+        instructions: `Please transfer ${plan.price / 100} to purchase the ${plan.name
+          } plan. Use your email as the reference.`,
       },
       'Membership purchase initiated. Please follow the instructions.',
     );

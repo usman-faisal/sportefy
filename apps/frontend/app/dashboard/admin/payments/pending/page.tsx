@@ -6,6 +6,7 @@ import { Payment } from "@sportefy/db-types";
 
 export default async function PendingPaymentsPage() {
   const pendingPayments = await paymentService.getPendingPayments();
+  console.log(pendingPayments)
 
   return (
     <div className="flex-col">

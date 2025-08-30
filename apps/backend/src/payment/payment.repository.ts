@@ -79,7 +79,7 @@ export class PaymentRepository extends BaseRepository {
   async getPendingPayments(tx?: DrizzleTransaction) {
     return this.getManyPayments(
       eq(payments.status, 'pending'),
-      { user: true }, // This is how we join the user/profile data
+      { profile: true, purchasedMembership: true }, // This is how we join the user/profile data
       undefined,
       undefined,
       (payments, { desc }) => [desc(payments.createdAt)],
@@ -137,7 +137,7 @@ export class PaymentRepository extends BaseRepository {
     data: Partial<NewPayment>,
     tx?: DrizzleTransaction,
   ) {
-    const dbClient = tx || this.db; 
+    const dbClient = tx || this.db;
     const [result] = await dbClient
       .update(payments)
       .set(data)

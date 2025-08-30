@@ -12,6 +12,7 @@ import {
   Slot,
   Payment,
   MaintenanceSchedule,
+  Membership,
 } from "@sportefy/db-types";
 import { DayOfWeek, MediaType } from "../types";
 
@@ -171,7 +172,8 @@ export interface VerifyPaymentDto {
 }
 
 export interface PaymentWithUser extends Payment {
-  user: Profile;
+  profile: Profile;
+  purchasedMembership: Membership | null;
 }
 
 export interface BookingTrendPoint {

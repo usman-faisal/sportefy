@@ -11,7 +11,7 @@ export const columns: ColumnDef<PaymentWithUser>[] = [
   {
     accessorKey: "user",
     header: "User",
-    cell: ({ row }) => <div>{row.original.user?.fullName || "N/A"}</div>,
+    cell: ({ row }) => <div>{row.original.profile?.fullName || "N/A"}</div>,
   },
   {
     accessorKey: "amountCredits",
@@ -26,6 +26,12 @@ export const columns: ColumnDef<PaymentWithUser>[] = [
       </Link>
     ),
   },
+  {
+    accessorKey: "membership",
+    header: "Membership",
+    cell: ({ row }) => <div>{row.original.purchasedMembership?.name || 'N/A'}</div>
+  },
+
   {
     accessorKey: "createdAt",
     header: "Request Date",

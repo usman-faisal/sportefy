@@ -10,6 +10,7 @@ import { relations, sql } from "drizzle-orm";
 import { users } from "./users.schema";
 import { transactions } from "./transactions.schema";
 import { memberships } from "./memberships.schema";
+import { profiles } from "./profiles.schema";
 
 // Define enums for payment method and status
 export const paymentMethodEnum = pgEnum("payment_method", [
@@ -63,6 +64,10 @@ export const paymentsRelations = relations(payments, ({ one, many }) => ({
     fields: [payments.userId],
     references: [users.id],
     relationName: "payment_user",
+  }),
+  profile: one(profiles, {
+    fields: [payments.userId],
+    references: [profiles.id],
   }),
   purchasedMembership: one(memberships, {
     fields: [payments.purchasedMembershipId],
