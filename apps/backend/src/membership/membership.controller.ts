@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
-import { ApiBody, ApiOperation } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Auth } from 'src/common/decorators/auth.decorator';
 import { UserRole } from 'src/common/types';
 import { MembershipService } from './membership.service';
@@ -20,6 +20,12 @@ export class MembershipController {
   getAvailablePlans() {
     return this.membershipService.getAvailablePlans();
   }
+  @Auth(UserRole.USER)
+  @Get('my')
+  @ApiOperation({ summary: 'Get your memberships history' })
+  getMyMemberships(@CurrentUser() user: Profile) {
+    return this.membershipService.getUserMembershipsHistory(user);
+  }
 
   @Auth(UserRole.USER)
   @Post('purchase')
@@ -39,10 +45,5 @@ export class MembershipController {
     return this.membershipService.getUserMembership(user);
   }
 
-  @Auth(UserRole.USER)
-  @Get('my')
-  @ApiOperation({ summary: 'Get your memberships history' })
-  getMyMemberships(@CurrentUser() user: Profile) {
-    return this.membershipService.getUserMembershipsHistory(user);
-  }
+
 }
