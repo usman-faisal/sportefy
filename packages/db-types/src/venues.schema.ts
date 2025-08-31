@@ -7,6 +7,7 @@ import {
   varchar,
   integer,
   doublePrecision,
+  numeric,
 } from 'drizzle-orm/pg-core';
 import { InferInsertModel, InferSelectModel, relations } from 'drizzle-orm';
 import { facilities } from './facilities.schema';
@@ -31,7 +32,7 @@ export const venues = pgTable('venues', {
 
   facilityId: uuid('facility_id')
     .notNull()
-    .references(() => facilities.id, {onDelete: 'cascade'}),
+    .references(() => facilities.id, { onDelete: 'cascade' }),
 
   name: varchar({ length: 255 }),
 
@@ -51,7 +52,7 @@ export const venues = pgTable('venues', {
   longitude: doublePrecision('longitude'),
 
   totalReviews: integer('total_reviews').default(0),
-  rating: integer('rating').default(0),
+  rating: numeric('rating', { precision: 3, scale: 2 }),
 
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
