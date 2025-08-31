@@ -76,15 +76,17 @@ export class ReviewService {
       const review = await this.reviewRepository.createReview(newReview, tx);
 
       // calculate the new average rating
+      const currentRating = venue.rating ? parseFloat(venue.rating) : 0;
+      const currentReviewCount = venue.totalReviews ?? 0;
       const averageRating = venue.rating
-        ? Math.round((venue.rating * (venue.totalReviews ?? 0) + createReviewDto.rating) /
-          ((venue.totalReviews ?? 0) + 1))
+        ? (currentRating * currentReviewCount + createReviewDto.rating) /
+        (currentReviewCount + 1)
         : createReviewDto.rating;
 
       // Update the venue's average rating
       await this.venueRepository.updateVenueById(
         createReviewDto.venueId,
-        { rating: averageRating, totalReviews: (venue.totalReviews ?? 0) + 1 },
+        { rating: averageRating.toString(), totalReviews: (venue.totalReviews ?? 0) + 1 },
         tx,
       );
 
