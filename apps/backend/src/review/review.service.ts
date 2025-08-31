@@ -17,7 +17,7 @@ export class ReviewService {
     private readonly reviewRepository: ReviewRepository,
     private readonly unitOfWork: UnitOfWork,
     private readonly mediaRepository: MediaRepository,
-  ) {}
+  ) { }
 
   async getReviews(getReviewsQuery: GetReviewsQuery) {
     const { venueId, limit, offset, page } = getReviewsQuery;
@@ -77,8 +77,8 @@ export class ReviewService {
 
       // calculate the new average rating
       const averageRating = venue.rating
-        ? (venue.rating * (venue.totalReviews ?? 0) + createReviewDto.rating) /
-          ((venue.totalReviews ?? 0) + 1)
+        ? Math.round((venue.rating * (venue.totalReviews ?? 0) + createReviewDto.rating) /
+          ((venue.totalReviews ?? 0) + 1))
         : createReviewDto.rating;
 
       // Update the venue's average rating

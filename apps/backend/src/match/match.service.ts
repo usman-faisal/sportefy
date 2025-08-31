@@ -17,7 +17,7 @@ import { and, eq, gte, inArray, lte, or } from 'drizzle-orm';
 import { matches, matchPlayers } from '@sportefy/db-types';
 import { ResponseBuilder } from 'src/common/utils/response-builder';
 import { MatchPlayerRepository } from 'src/match-player/match-player.repository';
-import { MatchType, PaymentSplitType, SlotEventType } from 'src/common/types';
+import { MatchType, PaymentSplitType, SlotEventType, SportType } from 'src/common/types';
 import { ProfileRepository } from 'src/profile/profile.repository';
 import { FilterMatchesDto } from './dto/filter-match.dto';
 import { bookings, sports, venues } from '@sportefy/db-types';
@@ -42,7 +42,7 @@ export class MatchService {
     private readonly matchJoinRequestService: MatchJoinRequestService,
     private readonly profileRepository: ProfileRepository,
     private readonly unitOfWork: UnitOfWork,
-  ) {}
+  ) { }
 
   async getMatchDetails(user: Profile, matchId: string) {
     const fullMatch = await this.matchRepository.getFullMatchDetails(matchId);
@@ -52,12 +52,17 @@ export class MatchService {
         'Match not found or is missing booking data.',
       );
     }
-
-    matchValidator.validateUserCanViewPrivateMatch(
-      fullMatch,
-      fullMatch.matchPlayers,
-      user,
-    );
+    if (fullMatch.sport.sportType === SportType.SINGLE) {
+      if (fullMatch.booking.bookedBy !== user.id) {
+        throw new ForbiddenException('You are not authorized to view this match');
+      }
+    } else {
+      matchValidator.validateUserCanViewPrivateMatch(
+        fullMatch,
+        fullMatch.matchPlayers,
+        user,
+      );
+    }
 
     return ResponseBuilder.success(fullMatch, 'Found match');
   }
@@ -74,9 +79,6 @@ export class MatchService {
       offset,
     );
 
-    if (!userMatches || userMatches.length === 0) {
-      throw new NotFoundException('No userMatches found for this user');
-    }
     const paginationLimit = limit || 10;
     const paginationPage = page || 1;
 
@@ -443,9 +445,6 @@ export class MatchService {
 
     const filteredMatches = await query;
 
-    if (!filteredMatches || filteredMatches.length === 0) {
-      throw new NotFoundException('No matches found for the given criteria.');
-    }
 
     return ResponseBuilder.success(
       filteredMatches,
