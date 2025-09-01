@@ -99,6 +99,30 @@ export const assertUserIsInMatchPlayers = (
   }
 };
 
+export const assertUserIsNotOnRequestedTeam = (
+  matchPlayers: MatchPlayer[],
+  userId: string,
+  requestedTeam: 'A' | 'B',
+) => {
+  const userPlayer = matchPlayers.find((player) => player.userId === userId);
+  if (userPlayer && userPlayer.team === requestedTeam) {
+    throw new BadRequestException(`You are already on team ${requestedTeam}`);
+  }
+};
+
+export const assertTargetTeamIsNotFull = (
+  matchPlayers: MatchPlayer[],
+  targetTeam: 'A' | 'B',
+  playerLimit: number,
+) => {
+  const targetTeamPlayerCount = matchPlayers.filter(
+    (player) => player.team === targetTeam,
+  ).length;
+  if (targetTeamPlayerCount >= playerLimit / 2) {
+    throw new ForbiddenException(`Team ${targetTeam} is already full`);
+  }
+};
+
 export const assertUserMeetsMatchCriteria = (match: Match, user: Profile) => {
   // Gender preference check
   if (
@@ -171,6 +195,20 @@ export const validateUserCanJoinByInvite = (
   assertBookingIsNotCancelled(booking);
   assertUserIsNotAlreadyInMatch(matchPlayers, user);
   assertMatchIsNotFull(matchPlayers, match.playerLimit);
+};
+
+export const validateUserCanSwitchTeam = (
+  match: Match,
+  booking: Booking,
+  matchPlayers: MatchPlayer[],
+  user: Profile,
+  targetTeam: 'A' | 'B',
+) => {
+  assertMatchIsOpen(match);
+  assertBookingIsNotCancelled(booking);
+  assertUserIsInMatchPlayers(matchPlayers, user.id);
+  assertUserIsNotOnRequestedTeam(matchPlayers, user.id, targetTeam);
+  assertTargetTeamIsNotFull(matchPlayers, targetTeam, match.playerLimit);
 };
 
 // =================================================================

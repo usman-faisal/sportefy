@@ -17,12 +17,13 @@ import { UserRole } from 'src/common/types';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { FilterMatchesDto } from './dto/filter-match.dto';
 import { GetMatchesDto } from './dto/get-matches.dto';
+import { SwitchTeamDto } from './dto/switch-team.dto';
 
 @ApiTags('Matches')
 @Controller('matches')
 @Auth(UserRole.USER, UserRole.ADMIN)
 export class MatchController {
-  constructor(private readonly matchService: MatchService) {}
+  constructor(private readonly matchService: MatchService) { }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get match details' })
@@ -61,7 +62,7 @@ export class MatchController {
   }
 
   @Post(':id/join')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Join a match',
     description: 'For public matches, creates a join request. For private matches, use the match code endpoint instead.'
   })
@@ -87,7 +88,7 @@ export class MatchController {
   }
 
   @Post('join-with-code')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Join a private match using match code',
     description: 'Use this endpoint to join private matches by providing the 6-character match code'
   })
@@ -95,8 +96,8 @@ export class MatchController {
     schema: {
       type: 'object',
       properties: {
-        matchCode: { 
-          type: 'string', 
+        matchCode: {
+          type: 'string',
           description: 'The 6-character match code (e.g., "ABC123" or "ABC-123")',
           example: 'ABC123'
         }
@@ -116,7 +117,7 @@ export class MatchController {
   }
 
   @Post(':id/regenerate-code')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Regenerate match code',
     description: 'Generate a new match code for a private match. Only the match creator can do this.'
   })
@@ -157,6 +158,25 @@ export class MatchController {
     @CurrentUser() user: Profile,
   ) {
     return this.matchService.kickPlayer(matchId, userId, user);
+  }
+
+  @Put(':id/switch-team')
+  @ApiOperation({
+    summary: 'Switch teams in a match',
+    description: 'Allows a player to switch from their current team to the other team if there is space available'
+  })
+  @ApiParam({ name: 'id', description: 'Match ID' })
+  @ApiBody({ type: SwitchTeamDto })
+  @ApiResponse({ status: 200, description: 'Successfully switched teams' })
+  @ApiResponse({ status: 400, description: 'Bad request - already on requested team or invalid team' })
+  @ApiResponse({ status: 403, description: 'Forbidden - match not open, target team full, or not a player' })
+  @ApiResponse({ status: 404, description: 'Match not found' })
+  async switchTeam(
+    @Param('id') matchId: string,
+    @CurrentUser() user: Profile,
+    @Body() switchTeamDto: SwitchTeamDto,
+  ) {
+    return this.matchService.switchTeam(user, matchId, switchTeamDto.team);
   }
 
   @Get()

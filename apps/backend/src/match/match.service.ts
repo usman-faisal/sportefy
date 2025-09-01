@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { MatchRepository } from './match.repository';
 import { UpdateMatchDto } from './dto/update-match.dto';
+import { SwitchTeamDto } from './dto/switch-team.dto';
 import {
   Profile,
   profiles,
@@ -391,6 +392,41 @@ export class MatchService {
     });
 
     return ResponseBuilder.success(null, 'User kicked successfully');
+  }
+
+  async switchTeam(user: Profile, matchId: string, targetTeam: 'A' | 'B') {
+    const match = await this.matchRepository.getMatchById(matchId, {
+      booking: true,
+      matchPlayers: true,
+    });
+
+    if (!match) {
+      throw new NotFoundException('Match does not exist');
+    }
+
+    matchValidator.validateUserCanSwitchTeam(
+      match,
+      match.booking,
+      match.matchPlayers,
+      user,
+      targetTeam,
+    );
+
+    const updatedMatchPlayer = await this.unitOfWork.do(async (tx) => {
+      const [updatedPlayer] = await this.matchPlayerRepository.updateMatchPlayerByIds(
+        matchId,
+        user.id,
+        { team: targetTeam },
+        tx,
+      );
+
+      return updatedPlayer;
+    });
+
+    return ResponseBuilder.updated(
+      updatedMatchPlayer,
+      `Successfully switched to team ${targetTeam}`,
+    );
   }
 
   async getFilteredMatches(filters: FilterMatchesDto) {
