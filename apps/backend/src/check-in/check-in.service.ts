@@ -40,7 +40,6 @@ import { WalkInCheckOutDto } from './dto/walk-in-check-out.dto';
 @Injectable()
 export class CheckInService {
   constructor(
-    private readonly jwtService: JwtService,
     private readonly bookingRepository: BookingRepository,
     private readonly matchRepository: MatchRepository,
     private readonly matchPlayerRepository: MatchPlayerRepository,
@@ -48,7 +47,7 @@ export class CheckInService {
     private readonly checkInRepository: CheckInRepository,
     private readonly profileRepository: ProfileRepository,
     private readonly venueSportRepository: VenueSportRepository,
-  ) {}
+  ) { }
 
   private async validateCheckInAttempt(booking: Booking, slot: Slot) {
     assertBookingStatusIs(
@@ -79,18 +78,11 @@ export class CheckInService {
   }
 
   async checkIn(user: Profile, checkInDto: CheckInDto) {
-    const { qrCode } = checkInDto;
-    let payload: { bookingId: string };
-
-    try {
-      payload = await this.jwtService.verifyAsync(qrCode);
-    } catch (error) {
-      throw new BadRequestException('Invalid or expired QR Code.');
-    }
+    const { bookingId } = checkInDto;
 
     const [bookingDetails] =
       await this.bookingRepository.getBookingsWithJoinedSlot(
-        eq(bookings.id, payload.bookingId),
+        eq(bookings.id, bookingId),
       );
 
     if (!bookingDetails) {
@@ -287,7 +279,7 @@ export class CheckInService {
 
   async getVenueCheckInCount(venueId: string) {
     const activeCheckInCount = await this.checkInRepository.getActiveCheckInCount(venueId);
-    
+
     return ResponseBuilder.success({
       venueId,
       activeCheckIns: activeCheckInCount,
