@@ -32,7 +32,7 @@ export class MatchJoinRequestService {
     private readonly profileRepository: ProfileRepository,
     private readonly creditService: CreditService,
     private readonly unitOfWork: UnitOfWork,
-  ) {}
+  ) { }
 
   async createJoinRequest(
     matchId: string,
@@ -244,11 +244,24 @@ export class MatchJoinRequestService {
       throw new NotFoundException('Match not found');
     }
 
-    // Only booking owner can view join requests
     assertUserOwnsTheBooking(user, match.booking);
 
     const requests =
-      await this.matchJoinRequestRepository.getRequestsByMatch(matchId);
+      await this.matchJoinRequestRepository.getRequestsByMatch(matchId, {
+        match: {
+          with: {
+            booking: {
+              with: {
+                slot: true,
+                venue: {
+                  columns: { name: true }
+                }
+              }
+            }
+          }
+        },
+        requesterProfile: { columns: { fullName: true, avatarUrl: true, gender: true, age: true } }
+      });
 
     return ResponseBuilder.success(
       requests,

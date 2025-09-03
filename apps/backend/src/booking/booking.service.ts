@@ -120,7 +120,7 @@ export class BookingService {
             )
         )
       );
-    } else {
+    } else if (status === 'previous') {
       whereConditions = and(
         bookingIsBookedByUser,
         exists(
@@ -133,6 +133,21 @@ export class BookingService {
                 eq(slots.eventType, 'booking'),
                 lt(slots.startTime, now),
                 gte(slots.startTime, thirtyDaysAgo)
+              )
+            )
+        )
+      );
+    } else {
+      whereConditions = and(
+        bookingIsBookedByUser,
+        exists(
+          this.bookingRepository.db
+            .select()
+            .from(slots)
+            .where(
+              and(
+                eq(slots.eventId, bookings.id),
+                eq(slots.eventType, 'booking')
               )
             )
         )
