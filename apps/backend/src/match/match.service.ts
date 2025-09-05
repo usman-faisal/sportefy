@@ -481,9 +481,31 @@ export class MatchService {
 
     const filteredMatches = await query;
 
+    const groupedMatches = filteredMatches.reduce((acc, row) => {
+      const matchId = row.match.id;
+
+      if (!acc[matchId]) {
+        acc[matchId] = {
+          match: row.match,
+          booking: row.booking,
+          venue: row.venue,
+          sport: row.sport,
+          slot: row.slot,
+          matchPlayers: []
+        };
+      }
+
+      if (row.matchPlayers?.userId) {
+        acc[matchId].players.push(row.matchPlayers);
+      }
+
+      return acc;
+    }, {});
+
+    const result = Object.values(groupedMatches);
 
     return ResponseBuilder.success(
-      filteredMatches,
+      result,
       'Matches retrieved successfully',
     );
   }
