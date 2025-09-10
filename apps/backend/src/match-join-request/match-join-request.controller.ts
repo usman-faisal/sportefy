@@ -77,6 +77,17 @@ export class MatchJoinRequestController {
     return this.matchJoinRequestService.getUserJoinRequests(user, limit, offset);
   }
 
+  @Get('join-request/pending-for-my-matches')
+  @ApiOperation({ summary: 'Get pending join requests for matches owned by current user' })
+  @ApiResponse({ status: 200, description: 'Pending join requests for user-owned matches retrieved successfully' })
+  async getPendingRequestsForUserOwnedMatches(
+    @CurrentUser() user: Profile,
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+  ) {
+    return this.matchJoinRequestService.getPendingRequestsForUserOwnedMatches(user, limit, offset);
+  }
+
   @Delete('join-request/:requestId')
   @ApiOperation({ summary: 'Cancel a join request' })
   @ApiResponse({ status: 200, description: 'Join request cancelled successfully' })

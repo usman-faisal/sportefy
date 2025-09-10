@@ -305,4 +305,22 @@ export class MatchJoinRequestService {
 
     return ResponseBuilder.deleted('Join request cancelled successfully');
   }
+
+  async getPendingRequestsForUserOwnedMatches(
+    user: Profile,
+    limit?: number,
+    offset?: number,
+  ) {
+    const requests = await this.matchJoinRequestRepository.getPendingRequestsForUserOwnedMatches(
+      user.id,
+      limit,
+      offset,
+      (matchJoinRequests, { desc }) => desc(matchJoinRequests.createdAt),
+    );
+
+    return ResponseBuilder.success(
+      requests,
+      'Pending join requests for your open matches retrieved successfully',
+    );
+  }
 }

@@ -229,4 +229,48 @@ export class MatchJoinRequestRepository extends BaseRepository {
       tx,
     );
   }
+
+  async getPendingRequestsForUserOwnedMatches(
+    userId: string,
+    limit?: number,
+    offset?: number,
+    orderBy?: MatchJoinRequestsOrderByInput,
+    tx?: DrizzleTransaction,
+  ) {
+    const dbClient = tx || this.db;
+    
+    const requests = await dbClient.query.matchJoinRequests.findMany({
+      where: (mjr, { eq }) => eq(mjr.status, 'pending'),
+      with: {
+        match: {
+          with: {
+            booking: {
+              with: {
+                slot: true,
+                venue: {
+                  columns: { name: true }
+                }
+              }
+            }
+          }
+        },
+        requesterProfile: { 
+          columns: { 
+            fullName: true, 
+            avatarUrl: true, 
+            gender: true, 
+            age: true 
+          } 
+        }
+      },
+      limit,
+      offset,
+      orderBy,
+    });
+
+    return requests.filter(request => 
+      request.match?.status === 'open' && 
+      request.match?.booking?.bookedBy === userId
+    );
+  }
 }
