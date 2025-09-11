@@ -496,7 +496,7 @@ export class MatchService {
       }
 
       if (row.matchPlayers?.userId) {
-        acc[matchId].players.push(row.matchPlayers);
+        acc[matchId].matchPlayers.push(row.matchPlayers);
       }
 
       return acc;

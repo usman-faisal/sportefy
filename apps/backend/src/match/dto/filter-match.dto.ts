@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IsArray, IsEnum, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { GenderPreferenceEnum, SkillLevel } from 'src/common/types';
@@ -23,6 +23,7 @@ export class FilterMatchesDto extends PaginationDto {
   gender?: GenderPreferenceEnum;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   @Max(100)
